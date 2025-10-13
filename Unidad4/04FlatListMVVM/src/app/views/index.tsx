@@ -1,18 +1,32 @@
-import { Text, View, FlatList, StyleSheet } from "react-native";
+import { Text, View, FlatList, StyleSheet, Pressable, Alert } from "react-native";
 import { IndexVM } from "../viewmodels/IndexVM"
 
 const usuarios = IndexVM.getPersonas()
 
 export function Index() {
+
+  const handlePress = (id: number) => {
+    const persona = IndexVM.getPersonaById(id);
+    if (persona) {
+      Alert.alert(
+        "Información de usuario",
+        `${persona.nombre} ${persona.apellidos}`,
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   return (
     <FlatList
-    data={usuarios}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem = {({ item }) => (
-      <View style={styles.item}>
-        <Text style={styles.text}>{item.nombre} {item.apellidos}</Text>
-      </View>
-    )}
+      data={usuarios}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+        <Pressable onPress={() => handlePress(item.id)}>
+          <View style={styles.item}>
+            <Text style={styles.text}>{item.nombre} {item.apellidos}</Text>
+          </View>
+        </Pressable>
+      )}
     />
   );
 }
