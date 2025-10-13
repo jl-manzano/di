@@ -1,4 +1,4 @@
-import { Text, View, FlatList, StyleSheet, Pressable, Alert } from "react-native";
+import { Text, View, FlatList, StyleSheet, Alert, Pressable } from "react-native";
 import { IndexVM } from "../viewmodels/IndexVM"
 
 const usuarios = IndexVM.getPersonas()
@@ -8,11 +8,15 @@ export function Index() {
   const handlePress = (id: number) => {
     const persona = IndexVM.getPersonaById(id);
     if (persona) {
+      // expo go
       Alert.alert(
         "Información de usuario",
         `${persona.nombre} ${persona.apellidos}`,
         [{ text: "OK" }]
       );
+     // navegador web & expo go
+      alert(`${persona.nombre} ${persona.apellidos}`);
+
     }
   };
 
