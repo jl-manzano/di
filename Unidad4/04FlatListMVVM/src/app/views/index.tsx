@@ -1,31 +1,15 @@
 import { Text, View, FlatList, StyleSheet, Alert, Pressable } from "react-native";
 import { IndexVM } from "../viewmodels/IndexVM"
 
-const usuarios = IndexVM.getPersonas()
-
 export function Index() {
-
-  const handlePress = (id: number) => {
-    const persona = IndexVM.getPersonaById(id);
-    if (persona) {
-      // expo go
-      Alert.alert(
-        "Información de usuario",
-        `${persona.nombre} ${persona.apellidos}`,
-        [{ text: "OK" }]
-      );
-     // navegador web & expo go
-      alert(`${persona.nombre} ${persona.apellidos}`);
-
-    }
-  };
+  const vm = new IndexVM();
 
   return (
     <FlatList
-      data={usuarios}
+      data={vm.Personas}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
-        <Pressable onPress={() => handlePress(item.id)}>
+        <Pressable onPress={() => (vm.personaSeleccionada = item)}>
           <View style={styles.item}>
             <Text style={styles.text}>{item.nombre} {item.apellidos}</Text>
           </View>

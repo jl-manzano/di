@@ -1,12 +1,26 @@
-import { RepositoryPersonas } from  '../models/data/RepositoryPersona'
+import { RepositoryPersonas } from '../models/data/RepositoryPersona';
+import { Persona } from '../models/entities/PersonaModel';
 
 export class IndexVM {
-    static getPersonas() {
-        return RepositoryPersonas.getPersonas();
+    private _personas: Persona[];
+    private _personaSeleccionada: Persona | undefined;
+
+
+    constructor() {
+        this._personas = RepositoryPersonas.getPersonas();
     }
 
-    static getPersonaById(id: number) {
-        const personas = RepositoryPersonas.getPersonas();
-        return personas.find(p => p.id === id);
+    public set personaSeleccionada(item: Persona | undefined) {
+        this._personaSeleccionada = item;
+        this.alertPersonaSeleccionada();
+    }
+
+    private alertPersonaSeleccionada() {
+        alert(`${this._personaSeleccionada?.nombre} ${this._personaSeleccionada?.apellidos}`);
+
+    }
+
+    public get Personas() {
+        return this._personas;
     }
 }
