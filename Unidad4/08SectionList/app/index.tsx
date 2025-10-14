@@ -20,17 +20,17 @@ const LALIGA = [
       { rank: 9, club: 'RCD Espanyol' },
       { rank: 10, club: 'Alavés' },
       { rank: 11, club: 'Getafe' },
-    ],
-  },
-  {
-    title: 'Final de Tabla',
-    data: [
       { rank: 12, club: 'Osasuna' },
       { rank: 13, club: 'Levante' },
       { rank: 14, club: 'Rayo Vallecano' },
       { rank: 15, club: 'Valencia C.F.' },
       { rank: 16, club: 'Celta de Vigo' },
       { rank: 17, club: 'Real Oviedo' },
+    ],
+  },
+  {
+    title: 'Final de Tabla',
+    data: [
       { rank: 18, club: 'Girona' },
       { rank: 19, club: 'Real Sociedad' },
       { rank: 20, club: 'R.C.D. Mallorca' },
@@ -42,7 +42,7 @@ export default function Index() {
     const getBackgroundColor = (rank: number) => {
     if (rank >= 1 && rank <= 5) {
       return '#B0E57C';
-    } else if (rank >= 6 && rank <= 11) {
+    } else if (rank >= 6 && rank <= 17) {
       return '#FFB347';
     } else {
       return '#FF6F61';
