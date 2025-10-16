@@ -1,21 +1,22 @@
-import { Text, View, SectionList, StyleSheet } from "react-native";
+import React from "react";
+import { Text, View, SectionList, StyleSheet, Image } from "react-native";
 
 const LALIGA = [
   {
-    title: 'Top 5',
+    title: 'PRINCIPIO DE TABLA',
     data: [
       { rank: 1, club: 'Real Madrid' },
       { rank: 2, club: 'Barcelona' },
       { rank: 3, club: 'Villarreal' },
       { rank: 4, club: 'Real Betis' },
       { rank: 5, club: 'Atlético Madrid' },
+      { rank: 6, club: 'Sevilla' },
+      { rank: 7, club: 'Elche C.F.' },
     ],
   },
   {
-    title: 'Mitad de tabla',
+    title: 'MITAD DE TABLA',
     data: [
-      { rank: 6, club: 'Sevilla' },
-      { rank: 7, club: 'Elche C.F.' },
       { rank: 8, club: 'Athletic' },
       { rank: 9, club: 'RCD Espanyol' },
       { rank: 10, club: 'Alavés' },
@@ -29,7 +30,7 @@ const LALIGA = [
     ],
   },
   {
-    title: 'Final de Tabla',
+    title: 'FINAL DE TABLA',
     data: [
       { rank: 18, club: 'Girona' },
       { rank: 19, club: 'Real Sociedad' },
@@ -38,31 +39,44 @@ const LALIGA = [
   },
 ];
 
-export default function Index() {
-    const getBackgroundColor = (rank: number) => {
-    if (rank >= 1 && rank <= 5) {
-      return '#B0E57C';
-    } else if (rank >= 6 && rank <= 17) {
-      return '#FFB347';
-    } else {
-      return '#FF6F61';
-    }
-  };
+const obtenerIcono = (posicion: number) => {
+  if (posicion >= 1 && posicion <= 4) {
+    return <Image source={require('../assets/images/champions-icon.png')} style={styles.icono} />;
+  } else if (posicion >= 5 && posicion <= 6) {
+    return <Image source={require('../assets/images/europa-icon.png')} style={styles.icono} />;
+  } else if (posicion == 7) {
+    return <Image source={require('../assets/images/conference-icon.png')} style={styles.icono} />;
+  } else if (posicion >= 18) {
+    return <Image source={require('../assets/images/hypermotion-icon.jpg')} style={styles.icono} />;
+  }
+};
 
+const getBackgroundColor = (rank: number) => {
+  if (rank >= 1 && rank <= 7) {
+    return '#B0E57C';
+  } else if (rank >= 8 && rank <= 17) {
+    return '#FFB347';
+  } else {
+    return '#FF6F61';
+  }
+};
+
+export default function Index() {
   return (
     <View style={styles.contenedor}>
       <SectionList
-      sections={LALIGA}
-      keyExtractor={(item, index) => String(item.rank + index)}
-      renderItem={({ item }) => (
-        <View style={[styles.item, { backgroundColor: getBackgroundColor(item.rank) }]}>
-          <Text style={styles.rank}>{item.rank}</Text>
-          <Text style={styles.club}>{item.club}</Text>
-        </View>
-      )}
-      renderSectionHeader={({ section }) => (
-        <Text style={styles.header}>{section.title}</Text>
-      )}
+        sections={LALIGA}
+        keyExtractor={(item, index) => String(item.rank + index)}
+        renderItem={({ item }) => (
+          <View style={[styles.item, { backgroundColor: getBackgroundColor(item.rank) }]}>
+            {obtenerIcono(item.rank)}
+            <Text style={styles.rank}>{item.rank}</Text>
+            <Text style={styles.club}>{item.club}</Text>
+          </View>
+        )}
+        renderSectionHeader={({ section }) => (
+          <Text style={styles.header}>{section.title}</Text>
+        )}
       />
     </View>
   );
@@ -83,6 +97,7 @@ const styles = StyleSheet.create({
   },
   item: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
@@ -96,4 +111,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
   },
-})
+  icono: {
+    width: 27,
+    height: 27,
+    marginRight: 15,
+    borderRadius: 20,
+  },
+});
