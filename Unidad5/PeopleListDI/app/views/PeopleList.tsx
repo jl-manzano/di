@@ -19,7 +19,7 @@ export default function PeopleList() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.titulo}>Mapher Game</Text>
+      <Text style={styles.titulo}>Listado de Personas</Text>
       <FlatList
         data={viewModel.personasList}
         renderItem={renderItem}
