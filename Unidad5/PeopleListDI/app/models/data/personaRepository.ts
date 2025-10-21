@@ -1,12 +1,12 @@
 import { injectable } from "inversify";
 import { Persona } from "../entities/Persona";
 
-// IRepositoryPersonas Interface
+// interfaz IRepositoryPersonas
 export interface IRepositoryPersonas {
-    getListadoCompletoPersonas(): Persona[];
+    getListadoCompletoPersonas(): Persona[]; // método para obtener la lista completa de personas
 }
 
-// Default repository with a fixed list of people
+// repositorio por defecto con una lista fija de personas
 @injectable()
 export class PersonasRepository implements IRepositoryPersonas {
     getListadoCompletoPersonas(): Persona[] {
@@ -41,22 +41,23 @@ export class PersonasRepository implements IRepositoryPersonas {
     }
 }
 
-// Repository for Test 1: Empty List (returns an empty list of personas)
+// repositorio para el test 1: lista vacía (devuelve una lista vacía de personas)
 @injectable()
 export class EmptyPersonasRepository implements IRepositoryPersonas {
     getListadoCompletoPersonas(): Persona[] {
-        return []; // Return an empty list of personas
+        return []; // devuelve una lista vacía de personas
     }
 }
 
-// Repository for Test 2: 100 People (returns a list of 100 personas)
+// repositorio para el test 2: 100 personas (devuelve una lista de 100 personas)
 @injectable()
 export class HundredPersonasRepository implements IRepositoryPersonas {
     getListadoCompletoPersonas(): Persona[] {
         const personas: Persona[] = [];
+        // crea una lista con 100 personas
         for (let i = 1; i <= 100; i++) {
             personas.push(new Persona(i, `Persona ${i}`, `Apellido ${i}`));
         }
-        return personas; // Return a list of 100 personas
+        return personas; // devuelve la lista de 100 personas
     }
 }
