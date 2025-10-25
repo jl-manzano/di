@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Ejercicio1",
-    "slug": "Ejercicio1",
+    "name": "PeopleListCA",
+    "slug": "PeopleListCA",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ejercicio1",
+    "scheme": "peoplelistca",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

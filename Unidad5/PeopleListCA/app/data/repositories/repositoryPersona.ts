@@ -1,10 +1,6 @@
 import { injectable } from "inversify";
-import { Persona } from "../entities/Persona";
-
-// interfaz IRepositoryPersonas
-export interface IRepositoryPersonas {
-    getListadoCompletoPersonas(): Persona[]; // método para obtener la lista completa de personas
-}
+import { Persona } from "../../domain/entities/Persona";
+import { IRepositoryPersonas } from "../../domain/interfaces/IRepositoryPersonas";
 
 // repositorio por defecto con una lista fija de personas
 @injectable()
