@@ -1,0 +1,59 @@
+/App
+    /src
+        /Domain
+            /Entities
+                Persona.ts
+                -id: int
+                -nombre: String
+                -apellidos: String
+                -fechaNacimiento: String
+                +Persona()
+                +Persona(int id, String nombre, String apellidos, String fechaNacimeinto)
+                +getId()
+                +getNombre()
+                +setNombre(String nombre)
+                +getApellidos()
+                +setApellidos(String apellidos)
+                +getFechaNacimiento()
+                +setFechaNacimiento(String fechaNacimiento)
+
+            /Interfaces
+                IGetPersonaUseCase.ts
+                + execute(): Persona
+
+            /UseCase
+                GetPersonasUseCase.ts(IPersonaRepository)
+                - repository: IPersonasRepository
+                + GetPersonasUseCase(repository: IPersonasRepository)
+                + execute(): Persona  ← Devuelve la persona según el día de la semana
+
+            /Repositories
+                IPersonaRepository.ts
+                + getListadoPersonas(): List<Persona>
+
+        /Data
+            /Repositories
+              PersonasRepository.ts (implementa IPersonasRepository)
+              + getPersonas(): Persona[]  ← Devuelve lista desde mock
+
+            /Mocks
+                MockPersonas.ts
+                - personas: Persona[] ← Lista estática de 7 personas inventadas
+
+
+        /Presentation
+            /Views
+                ListadoPersonas.tsx
+                index.tsx
+                + Renderiza <ListadoPersonas />
+
+
+            /ViewModels
+                ListadoPersonasVM.ts
+                - persona: Persona
+                - getPersonaUC: IGetPersonaUseCase
+                + ListadoPersonasVM(getPersonaUC: IGetPersonaUseCase)
+                + getPersona(): Persona ← Devuelve la persona del día
+        /Core
+            types.ts
+            container.ts

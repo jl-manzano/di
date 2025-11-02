@@ -1,6 +1,6 @@
 import { Container } from "inversify";
 import "reflect-metadata";
-import { PersonasRepository } from "../data/repositories/repositoryPersona";
+import { PersonasRepository, HundredPersonasRepository, EmptyPersonasRepository } from "../data/repositories/repositoryPersona";
 import { IRepositoryPersonas } from "../domain/interfaces/IRepositoryPersonas";
 import { PeopleListVM } from "../presentation/viewmodels/PeopleListVM";
 import { GetPeopleListUC } from "../domain/usecases/GetPeopleListUC";

@@ -1,0 +1,28 @@
+/App
+ └── /src
+      ├── /Domain
+      │    ├── /Entities
+      │    │     └── Persona.ts
+      │    ├── /Repositories
+      │    │     └── IPersonaRepository.ts
+      │    ├── /UseCases
+      │    │     └── GetPersonaDelDiaUseCase.ts
+      │    └── /Interfaces
+      │          └── IGetPersonaUseCase.ts
+      │
+      ├── /Data
+      │    ├── /Mocks
+      │    │     └── MockPersonas.ts
+      │    └── /Repositories
+      │          └── PersonaRepositoryImpl.ts
+      │
+      ├── /Presentation
+      │    ├── /ViewModels
+      │    │     └── ListadoPersonasVM.ts
+      │    └── /Views
+      │          ├── ListadoPersonas.tsx
+      │          └── index.tsx
+      │
+      └── /Core
+           ├── types.ts
+           └── container.ts

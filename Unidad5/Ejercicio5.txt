@@ -1,0 +1,55 @@
+/App
+    /src
+        /Domain
+            /Entities
+                Persona.ts
+                - id: number
+                - nombre: string
+                - apellidos: string
+                - esMayorDeEdad: boolean
+                + constructor(id: number, nombre: string, apellidos: string, esMayorDeEdad: boolean)
+                + getId(): number
+                + getNombre(): string
+                + setNombre(nombre: string): void
+                + getApellidos(): string
+                + setApellidos(apellidos: string): void
+                + getEsMayorDeEdad(): boolean
+
+            /Interfaces
+                IGetPersonasUseCase.ts
+                + execute(): Persona[]
+
+            /Repositories
+                IPersonaRepository.ts
+                + getListadoPersonas(): List<Persona>
+
+            /UseCase
+                GetPersonasUseCase.ts (implementa IGetPersonasUseCase)
+                - repository: IPersonasRepository
+                + execute(): Persona[]
+
+        /Data
+            /Repositories
+                PersonasRepository.ts (implementa IPersonasRepository)
+                + getListadoPersonas(): Persona[]
+
+            /Mocks
+                MockPersonas.ts
+                - personas: Persona[]
+
+        /Presentation
+            /Views
+                ListadoPersonas.tsx
+                index.tsx
+                + Renderiza <ListadoPersonas />
+
+            /ViewModels
+                ListadoPersonasVM.ts
+                - getPersonasUC: IGetPersonasUseCase
+                - personas: Persona[]
+                + ListadoPersonasVM(getPersonasUC: IGetPersonasUseCase)
+                + getPersonas(): Persona[] ← llama a use case y devuelve lista
+
+        /Core
+            types.ts
+            container.ts
