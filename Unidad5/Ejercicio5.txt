@@ -36,6 +36,12 @@
             /Mocks
                 MockPersonas.ts
                 - personas: Persona[]
+            
+            /DTO
+                PersonaDTO.ts
+            
+            /Mappers
+                PersonaMapper.ts
 
         /Presentation
             /Views
