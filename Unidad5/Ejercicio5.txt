@@ -3,52 +3,59 @@
         /Domain
             /Entities
                 Persona.ts
-                - id: number
-                - nombre: string
-                - apellidos: string
-                - esMayorDeEdad: boolean
-                + constructor(id: number, nombre: string, apellidos: string, esMayorDeEdad: boolean)
-                + getId(): number
-                + getNombre(): string
-                + setNombre(nombre: string): void
-                + getApellidos(): string
-                + setApellidos(apellidos: string): void
-                + getEsMayorDeEdad(): boolean
+                -id: int
+                -nombre: String
+                -apellidos: String
+                -fechaNacimiento: String
+                +Persona()
+                +Persona(int id, String nombre, String apellidos, String fechaNacimeinto)
+                +getId()
+                +getNombre()
+                +setNombre(String nombre)
+                +getApellidos()
+                +setApellidos(String apellidos)
+                +getFechaNacimiento()
+                +setFechaNacimiento(String fechaNacimiento)
+
+            /DTO
+                PersonaWithCheck.ts
+                + persona: Persona
+                + esMayorDeEdad: boolean
+                + PersonaWithCheck(persona: Persona, esMayorDeEdad: boolean)
 
             /Interfaces
                 IGetPersonasUseCase.ts
-                + execute(): Persona[]
+                + execute(): List<PersonaWithCheck> // devuelve lista de personas con check esMayorDeEdad
 
             /Repositories
                 IPersonaRepository.ts
-                + getListadoPersonas(): List<Persona>
+                + getListadoPersonas(): List<Persona> // obtiene lista de personas
 
             /UseCase
-                GetPersonasUseCase.ts (implementa IGetPersonasUseCase)
-                - repository: IPersonasRepository
-                + execute(): Persona[]
+                GetPersonasUseCase.ts (implementa IGetPersonasUseCase) 
+                + getListaPersonas(): PersonaWithCheck[] // obtiene lista de personas y añade check de mayor de edad
+                + execute(): PersonaWithCheck[] // llama al repositorio, obtiene las personas y las transforma a PersonaWithCheck
 
         /Data
             /Repositories
                 PersonasRepository.ts (implementa IPersonasRepository)
-                + getListadoPersonas(): Persona[]
-
-            /Mocks
-                MockPersonas.ts
-                - personas: Persona[]
+                + getListadoPersonas(): Persona[] // devuelve lista estática de personas
 
         /Presentation
             /Views
-                ListadoPersonas.tsx
                 index.tsx
-                + Renderiza <ListadoPersonas />
 
             /ViewModels
                 ListadoPersonasVM.ts
-                - getPersonasUC: IGetPersonasUseCase
-                - personas: Persona[]
-                + ListadoPersonasVM(getPersonasUC: IGetPersonasUseCase)
-                + getPersonas(): Persona[] ← llama a use case y devuelve lista
+                - ListadoPersonasVM: IGetPersonasUseCase ← inyecta el caso de uso
+                + getPersonasUC ← llama al caso de uso y obtiene lista de personas con el check de mayor de edad
+
+            /Mappers
+                IPersonasMayoresEdad.ts
+                + esMayorDeEdad(persona: Persona): boolean // método para determinar si la persona es mayor de edad
+
+                PersonasMayoresEdad.ts
+                + esMayorDeEdad(persona: Persona): boolean // implementa el mapeo para determinar si la persona es mayor de edad según su fecha de nacimiento
 
         /Core
             types.ts

@@ -1,0 +1,57 @@
+/App
+    /src
+        /Domain
+            /Entities
+                Pokemon.ts
+                -nombre: string
+                -url: string
+                +Pokemon()
+                +Pokemon(nombre: string, url: string)
+                +getNombre(): string
+                +setNombre(nombre: string)
+                +getUrl(): string
+                +setUrl(url: string)
+
+            /DTO
+                PokemonDTO.ts
+                +pokemon: Pokemon
+                +PokemonDTO(pokemon: Pokemon)
+
+            /Interfaces
+                IGetPokemonsUseCase.ts
+                +execute(edad: number): Promise<PokemonDTO[]> // obtiene lista de Pokémon filtrada por edad
+
+                IPokemonRepository.ts
+                +getPokemons(limit: number, offset: number): Promise<Pokemon[]> // obtiene Pokémon de la PokéAPI
+
+            /Repositories
+                IPokemonRepository.ts
+                +getPokemons(limit: number, offset: number): Promise<Pokemon[]> // obtiene Pokémon desde la API
+
+            /UseCase
+                GetPokemonsUseCase.ts
+                +execute(edad: number): Promise<PokemonDTO[]> // llama al repositorio, obtiene los Pokémon y los transforma a PokemonDTO
+
+        /Data
+            /Repositories
+                PokemonRepository.ts
+                +getPokemons(limit: number, offset: number): Promise<Pokemon[]> // devuelve lista de Pokémon desde la PokéAPI
+
+        /Presentation
+            /Views
+                Index.tsx
+                -renderiza la vista para mostrar los Pokémon filtrados por edad
+
+            /ViewModels
+                ListadoPokemonsVM.ts
+                - ListadoPokemonsVM: IGetPokemonsUseCase ← inyecta el caso de uso
+                +getPokemons(edad: number) ← llama al caso de uso y obtiene lista de Pokémon filtrada por edad
+
+            /Mappers
+                EdadMapper.ts
+                +getLimit(edad: number): number // determina el límite de Pokémon a mostrar según la edad
+                +getOffset(edad: number): number // determina el desplazamiento (offset) de los Pokémon a mostrar según la edad
+
+        /Core
+            types.ts
+            container.ts
