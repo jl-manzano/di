@@ -41,18 +41,6 @@
                 PersonasRepository.ts (implementa IPersonasRepository)
                 + getListadoPersonas(): Persona[] // devuelve lista estática de personas
 
-                + getListadoPersonas(): Persona[]
-
-            /Mocks
-                MockPersonas.ts
-                - personas: Persona[]
-            
-            /DTO
-                PersonaDTO.ts
-            
-            /Mappers
-                PersonaMapper.ts
-
         /Presentation
             /Views
                 index.tsx
