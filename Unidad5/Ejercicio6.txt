@@ -4,53 +4,84 @@
             /Entities
                 Pokemon.ts
                 -nombre: string
+                -edicion: string
                 -url: string
                 +Pokemon()
-                +Pokemon(nombre: string, url: string)
+                +Pokemon(nombre: string, edicion: string, url: string)
                 +getNombre(): string
                 +setNombre(nombre: string)
+                +getEdicion(): string
+                +setEdicion(edicion: string)
                 +getUrl(): string
                 +setUrl(url: string)
 
             /DTO
                 PokemonDTO.ts
-                +pokemon: Pokemon
-                +PokemonDTO(pokemon: Pokemon)
+                -nombrePokemon: string
+                +getNombrePokemon(): string
+                +PokemonDTO()
+                +PokemonDTO(nombrePokemon: string)
 
             /Interfaces
-                IGetPokemonsUseCase.ts
-                +execute(edad: number): Promise<PokemonDTO[]> // obtiene lista de Pokémon filtrada por edad
+                IPokemonUseCase.ts
+                + interface IPokemonUseCase
+                    List<Pokemon> getListadoPokemonsDTO(int edadPersona)
 
                 IPokemonRepository.ts
-                +getPokemons(limit: number, offset: number): Promise<Pokemon[]> // obtiene Pokémon de la PokéAPI
-
-            /Repositories
-                IPokemonRepository.ts
-                +getPokemons(limit: number, offset: number): Promise<Pokemon[]> // obtiene Pokémon desde la API
+                + interface IPokemonRepository
+                    List<Pokemon> getListadoPokemons()
 
             /UseCase
-                GetPokemonsUseCase.ts
-                +execute(edad: number): Promise<PokemonDTO[]> // llama al repositorio, obtiene los Pokémon y los transforma a PokemonDTO
+                PokemonsUseCase.ts
+                + class PokemonsUseCase: IPokemonUseCase
+                - readonly IPokemonRepository _listadoPokemonRepository
+                + PokemonsUseCase(IPokemonRepository listadoPokemonRepository)
+                + List<Pokemon> getListadoPokemons(int edadPersona)
 
         /Data
             /Repositories
                 PokemonRepository.ts
-                +getPokemons(limit: number, offset: number): Promise<Pokemon[]> // devuelve lista de Pokémon desde la PokéAPI
+                + class PokemonRepository: IPokemonRepository
+                - List<Pokemon> _listadoPokemonRepository
+                + PokemonRepository()
+                + List<Pokemon> getListadoPokemons()
 
         /Presentation
             /Views
+                Home/
                 Index.tsx
-                -renderiza la vista para mostrar los Pokémon filtrados por edad
+
+            /Models
+                PokemonUI.ts
+                -nombrePokemon: string
+                +getNombrePokemon(): string
+                +PokemonUI(nombrePokemon: string)
 
             /ViewModels
                 ListadoPokemonsVM.ts
-                - ListadoPokemonsVM: IGetPokemonsUseCase ← inyecta el caso de uso
-                +getPokemons(edad: number) ← llama al caso de uso y obtiene lista de Pokémon filtrada por edad
+                    + class ListadoPokemonsVM
+                    - readonly PokemonsUseCase _pokemonsUseCase
+                    + ListadoPokemonsVM(PokemonsUseCase pokemonsUseCase)
+                    + List<PokemonUI> getListadoPokemons(int edadPersona)
 
             /Mappers
-                EdadMapper.ts
-                +getLimit(edad: number): number // determina el límite de Pokémon a mostrar según la edad
-                +getOffset(edad: number): number // determina el desplazamiento (offset) de los Pokémon a mostrar según la edad
+                IDomainToUIMapper.ts
+                    + interface IDomainToUIMapper
+                        - map(pokemonDTO: PokemonDTO): PokemonUI
+
+                DomainToUIMapper.ts
+                    + class DomainToUIMapper
+                    - map(pokemonDTO: PokemonDTO): PokemonUI
+                    + map(pokemonDTO: PokemonDTO): PokemonUI
+
+                IPokemonToDTOMapper.ts
+                    + interface IPokemonToDTOMapper
+                        - map(pokemon: Pokemon): PokemonDTO
+
+                PokemonToDTOMapper.ts
+                    + class PokemonToDTOMapper
+                    - map(pokemon: Pokemon): PokemonDTO
+                    + map(pokemon: Pokemon): PokemonDTO
 
         /Core
             types.ts
