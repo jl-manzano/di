@@ -1,0 +1,81 @@
+app/
+	domain/
+		entities/
+			Habitacion.cs
+				+ class Habitacion
+					- int _numeroHabitacion
+					- double _precio
+					+ int get { return _numeroHabitacion; }
+					+ int get { return _precio; }
+					+ int set { _precio = value ; }
+					+ Habitacion(int numeroHabitacion, double precio)
+					+ Habitacion()
+		dto/
+			HabitacionDTO.cs
+				+ class HabitacionDTO
+					- int _numeroHabitacion
+					- double _precioTotal
+					+ int get { return _numeroHabitacion; }
+					+ int get { return _precio; }
+					+ int set { _precio = value ; }
+					+ HabitacionDTO(int numeroHabitacion, double precioTotal)
+
+		interfaces/
+			repository/
+				IHabitacionesRepository.cs
+					+ interface IHabitacionesRepository
+						+ List<Habitacion> getHabitaciones()
+			useCases/
+				IHabitacionesUseCase
+					+ interface IHabitacionesUseCases
+						+ List<HabitacionDTO> getHabitacionesDTO(DateOnly fechaEntrada, DateOnly FechaSalida, int numeroPersonas, int numeroHabitaciones)
+			mappers/
+				IHabitacionToHabitacionDTO.cs
+					+ interface IHabitacionToHabitacionDTO
+						+ HabitacionDTO map(Habitacion habitacion, int numeroDias)
+													 
+		mappers/
+			HabitacionToHabitacionDTO.cs
+				+ class HabitacionToHabitacionDTO : IHabitacionToHabitacionDTO
+					+ HabitacionDTO map(Habitacion habitacion, int numeroDias) -> Multiplica el precio de la habitacion por el numero de dias, crea y devuelve
+												      la HabitacionDTO
+		useCases/
+			HabitacionUseCases.cs
+				+ class HabitacionUseCases : HabitacionesUseCases
+					- readonly IHabitacionesRepository _habitacionesRepository
+					- readonly IHabitacionToHabitacionDTO _mapper
+					+ HabitacionUseCases(IHabitacionesRepository habitacionesRepository, IHabitacionToHabitacionDTO mapper) 
+						_habitacionesRepository = habitacionesRepository
+						_mapper = mapper
+
+					+ List<HabitacionDTO> getHabitacionesDTO(DateOnly fechaEntrada, DateOnly FechaSalida, int numeroPersonas, int numeroHabitaciones) -> Si las fechas son válidas, y la capacidad tambien (usa las dos funciones privadas del caso de uso para checkearlo), 
+																			 		     se calcula el numero de dias restando los dias de las fechas, se obtiene el listado de habitaciones usando el get del repositorio,
+													    			  		        		     recorre el listado de habitaciones y usa la funcion del mapper para mapear de entidad a DTO.
+																					     Crea un listado de habitaciones dto y va añadiendo la habitacion mapeada ya siendo un dto, finalmente lo devuelve
+																				             Si las fechas no son válidas o la capacidad tampoco, se lanza una excepcion
+
+					- Boolean compruebaFechas(DateOnly fechaInicio, DateOnly fechaSalida) -> Comprueba que la fecha de entrada es mayor o igual a la de hoy, y la fecha de salida
+													         es mayor que la fecha de entrada
+
+					- Boolean compruebaCapacidad(int numeroPersonas, int numeroHabitaciones) -> Comprueba que la division de personas entre las habitaciones solicitadas es menor o igual a 3, si lo es devuelve true, si es mayor que 
+														    3 devuelve false
+	data/
+		repositories/
+			+ class HabitacionesRepository : IHabitacionesRepository
+				- List<Habitacion> _listadoHabitaciones
+				+ HabitacionesRepository() -> constructor, crea y devuelve el mock del listado de habitaciones
+				+ List<Habitacion> getHabitaciones() -> Devuelve la lista de habitaciones
+	presentation/
+		models/	
+		controller/
+			HabitacionesVM.cs
+				- readonly IHabitacionesUseCases _habitacionesUseCases
+				+ HabitacionesVM(IHabitacionesUseCases habitacionesUseCases)
+					_habitacionesUseCases = habitacionesUseCases
+				+ IActionResult Form() -> Retorna la vista del formulario
+				[HttpPost]
+				+ IActionResult List(DateOnly fechaEntrada, DateOnly FechaSalida, int numeroPersonas, int numeroHabitaciones) -> llama a la funcion que obtiene las habitaciones dto y el resultado se manda a la vista
+					
+		views/
+			Form.cshtml
+			Habitaciones.cshtml

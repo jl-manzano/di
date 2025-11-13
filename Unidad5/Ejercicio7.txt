@@ -1,0 +1,66 @@
+Realiza la estructura de carpetas y las clases e interfaces necesarias para crear una aplicación que siga una arquitectura limpia y que cumpla los siguiente:
+Se sigue un patrón MVVM.
+Se debe mostrar por pantalla un listado de las habitaciones que tiene el hotel para reservar y el precio total (que será la multiplicación de los días por el precio por noche de  esa habitación).
+No nos preocuparemos por si las habitaciones están reservadas en esas fechas.
+Para mostrar este listado, es necesario una fecha de entrada, una fecha de salida, un número de personas y un número de habitaciones.
+La fecha de entrada debe ser mayor o igual a la de hoy.
+La fecha de entrada, debe ser mayor a la fecha de salida.
+Nuestras habitaciones son de un máximo de 3 personas, así que si los datos que introduzca el usuario debe ser coherente con esto.
+
+(Biblioteca de clases)
+Domain/
+    Entities/
+    Habitación
+        - numHabitacion int { get }
+        - precioUnitario double { get, set }
+        + constructor()
+        + constructor(numHabitacion, precioUnitario)
+    
+    UseCases/
+    ListadoHabitacionesUseCase: IListadoHabitacionesUseCase (implementa)
+    - IListadoHabitaciones _listadoHabitaciones (inyectado)
+    - IHabitacionToHabitacionDTO _mapper
+    + ListadoHabitacionesUseCase(IListadoHabitaciones listadoHabitaciones, IHabitacionToHabitacionDTO mapper)
+        _listadoHabitaciones = listadoHabitaciones
+        _mapper = mapper
+
+    + List<HabitacionesDTO> getListadoHabitaciones(dateonly fechaEntrada, dateonly fechaSalida, int numHabitaciones, int numPersonas) - llama a las funciones del caso de uso y hace las comprobaciones de la fecha de entrada y de la capacidad y en función de si se cumplen las condiciones o no, llama al mapper y transforma el objeto Habitacion a un objeto HabitacionDTO y lo almacena en una lista y devuelve un ListadoHabitacionesDTO, que se envía al VM, que se lo pasa a la vista.
+
+    - boolean compruebaFecha(dateonly fechaEntrada, dateonly fechaSalida) - comprueba si la fecha de entrada es mayor / igual a la de hoy y si es mayor a la fecha de salida; retornará true si cumple dichas condiciones
+    - boolean compruebaCapacidad(int numHabitaciones, int numPersonas) - teniendo en cuenta que el máximo de personas es 3 por habitación comprobar si el número de personas es coherente, es decir, 7 personas no podrían hospedarse en 2 habitaciones
+
+    DTOs/
+        HabitacionesDTO:
+        - numHabitacion int { get }
+        - precioTotal double { get, set }
+
+        + constructor(numHabitacion, precioTotal)
+
+    /Interfaces
+        IListadoHabitacionesUseCase:
+            + ListadoHabitacionesDTO getListadoHabitaciones(dateonly fechaEntrada, dateonly fechaSalida, int numHabitaciones, int numPersonas)
+
+    Repositories/
+        IListadoHabitaciones:
+            + List<Habitación> getListadoHabitaciones()
+
+/Presentation
+    /Views
+        ListadoHabitaciones()
+        Formulario()
+    
+    /ViewModels/
+
+    /Mappers
+        IHabitacionToHabitacionDTO
+        + HabitacionDTO transformar(habitacion: Object Habitacion, fechaEntrada:String, fechaSalida:String)
+
+        HabitacionToHabitacionDTO : IHabitacionToHabitacionDTO
+        + HabitacionDTO transformar(habitacion: Object Habitacion, fechaEntrada:String, fechaSalida:String)
+
+(Biblioteca de clases)
+Data/
+    Repositories/
+    ListadoHabitaciones: IListadoHabitaciones(implementa)
+    - List<Habitación> listadoHabitaciones
+    + List<Habitación> getListadoHabitaciones()

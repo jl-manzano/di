@@ -1,0 +1,69 @@
+(Biblioteca de clases)
+Domain/
+    Entities/
+    clsEntidad: 
+    atributos y getters y/o setters
+
+    UseCases/
+        UseCase: IUseCase (implementa)
+        - listadoRepositorio (inyectado)
+        + ListadoDTO getListadoEntidadDTO() - llama a la función del caso de uso, que decide mostrar o no, dependiendo si se cumple lo establecido en ésta, un ListadoEntidadDTO
+        + ListadoDTO getListadoEntidadDTO(atributo por el que se quiera buscar, normalmente Id) - llama a la función del caso de uso, que decide mostrar o no, dependiendo si se cumple lo establecido en ésta, un registro de la ListadoEntidadDTO por el Id o atributo (opcional)
+        - boolean comprobacion() -> hace la comprobacion que se establece en el enunciado y retornará true o false si las condiciones se cumplen o no
+
+    DTOs/
+        ListadoEntidadDTO:
+        + List<clsEntidad> listadoEntidad
+        + clsEntidad EntidadSeleccionada (opcional) 
+
+        constructor(List<clsEntidad>) -> recibe un listado de tipo clsEntidad, que construye el dto con ese listado
+        constructor(List<clsEntidad>, EntidadSeleccionada) -> recibe un listado de tipo clsEntidad, que construye el dto con ese listado y un registro clsEntidad seleccionada (opcional)
+        + getListadoEntidad()
+        + getEntidadSeleccionada() (opcional)
+
+    Interfaces/
+        IUseCase:
+            + ListadoEntidadDTO getListadoEntidad()
+            + ListadoEntidadDTO getListadoEntidad(int Id) (opcional)
+
+    Repositories/
+        IListadoEntidad:
+            + List<clsEntidad> getListadoEntidad()
+            + clsEntidad getListadoEntidadById(int Id) (opcional)
+
+(Biblioteca de clases)
+Data/
+    Repositories/
+    ListadoEntidad: IListadoEntidad(implementa)
+    - List<clsEntidad>: listado con registros de tipo clsEntidad
+
+    + List<clsEntidad> getListadoEntidad() - devuelve listado de misiones almacenado
+    + clsEntidad getListadoEntidadById(int id) - devuelve registro de la lista en base al Id recibido (opcional)
+
+(Proyecto MVC)
+UI/
+    Controllers/
+        EntidadController : Controller - gestiona las peticiones del usuario y se comunica con el caso de uso para obtener los registros del listado
+            - IUseCase _useCase; (inyectado)
+            constructor EntidadController(IUseCase useCase) - asigna la instancia del caso de uso y la asigna al campo _useCase
+
+            Index() - obtiene desde la llamada a getListadoEntidad() del caso de uso un dto listadoEntidadDTO con el listado de registros de tipo clsEntidad y lo pasará a la vista (puede llegarle una excepción si no se cumplen las condiciones establecidas en el caso de uso al hacer la llamada)
+
+            [HttpPost]
+            Index(int Id) - recibe el id por POST y obtiene desde la llamada al getListadoEntidadDTO(Id) del caso de uso un dto listadoEntidadDTO con el listado de registros de tipo clsEntidad y el registro seleccionado y lo pasará a la vista (puede llegarle una excepción si no se cumplen las condiciones establecidas en el caso de uso al hacer la llamada)
+    Views/
+        Index - mostrará lo que se pida en el ejercicio que deberá mostrar la vista
+    
+(Biblioteca de clases)
+CompositionRoot/
+    DependencyInjection
+        - método AddDependencies(IServiceCollection services) - registra las interfaces e implementaciones necesarias:
+            IUseCase -> UseCase
+            IListadoEntidad -> ListadoEntidad
+
+    capa utilizada por UI (Program.cs) -> inicializar las dependencias antes de ejecutar la aplicación
+
+
+
+
+

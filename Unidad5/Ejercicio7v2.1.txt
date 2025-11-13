@@ -1,0 +1,86 @@
+app/
+	domain/
+    		entities/
+      			Habitacion.ts
+        			+ class Habitacion
+          				- private _numeroHabitacion: number
+          				- private _precio: number
+          				+ constructor(numeroHabitacion: number, precio: number)
+          				+ get numeroHabitacion(): number
+          				+ get precio(): number
+          				+ set precio(value: number)
+
+		dto/
+      			HabitacionDTO.ts
+        			+ class HabitacionDTO
+          				- private _numeroHabitacion: number
+          				- private _precioTotal: number
+          				+ constructor(numeroHabitacion: number, precioTotal: number)
+          				+ get numeroHabitacion(): number
+          				+ get precioTotal(): number
+          				+ set precioTotal(value: number)
+
+    		interfaces/
+      			repository/
+        			IHabitacionesRepository.ts
+          				+ interface IHabitacionesRepository
+            					+ getHabitaciones(): Habitacion[]
+
+      			useCases/
+        			IHabitacionesUseCases.ts
+          				+ interface IHabitacionesUseCases
+            					+ getHabitacionesDTO(fechaEntrada: Date, fechaSalida: Date, numeroPersonas: number, numeroHabitaciones: number): HabitacionDTO[]
+
+      			mappers/
+        			IHabitacionToHabitacionDTO.ts
+          				+ interface IHabitacionToHabitacionDTO
+            					+ map(habitacion: Habitacion, numeroDias: number): HabitacionDTO
+
+   		mappers/
+    			HabitacionToHabitacionDTO.ts
+        			+ class HabitacionToHabitacionDTO implements IHabitacionToHabitacionDTO
+          				+ map(habitacion: Habitacion, numeroDias: number): HabitacionDTO -> Multiplica el precio por el número de días y devuelve un HabitacionDTO
+
+    		useCases/
+    			HabitacionUseCases.ts
+        			+ class HabitacionUseCases implements IHabitacionesUseCases
+          				- private _habitacionesRepository: IHabitacionesRepository
+          				- private _mapper: IHabitacionToHabitacionDTO
+          				+ constructor(habitacionesRepository: IHabitacionesRepository, mapper: IHabitacionToHabitacionDTO)
+          				+ getHabitacionesDTO(fechaEntrada: Date, fechaSalida: Date, numeroPersonas: number, numeroHabitaciones: number): HabitacionDTO[]
+            					-> Comprueba fechas y capacidad
+            					-> Calcula número de días
+            					-> Obtiene listado de habitaciones desde el repositorio
+            					-> Mapea cada Habitacion a HabitacionDTO usando el mapper
+            					-> Devuelve listado de HabitacionDTO
+          				- private compruebaFechas(fechaInicio: Date, fechaSalida: Date): boolean
+          				- private compruebaCapacidad(numeroPersonas: number, numeroHabitaciones: number): boolean
+ 	data/
+    		repositories/
+      			HabitacionesRepository.ts
+        			+ class HabitacionesRepository implements IHabitacionesRepository
+          				- private _listadoHabitaciones: Habitacion[]
+          				+ constructor() -> crea un mock del listado de habitaciones
+          				+ getHabitaciones(): Habitacion[]
+
+	presentation/
+    		viewmodels/
+      			HabitacionesVM.ts
+        			+ class HabitacionesVM
+          				- private _habitacionesUseCases: IHabitacionesUseCases
+         				- private _habitaciones: HabitacionDTO[]
+          				+ constructor(habitacionesUseCases: IHabitacionesUseCases)
+          				+ obtenerHabitaciones(fechaEntrada: Date, fechaSalida: Date, numeroPersonas: number, numeroHabitaciones: number): void
+            					-> Llama al caso de uso y actualiza _habitaciones
+          				+ get habitaciones(): HabitacionDTO[]
+
+                        // PREGUNTAR EL POR QUE DE ESTA LINEA -> - private _habitaciones: HabitacionDTO[]
+
+    		views/
+      			Form.tsx
+        			-> Formulario para ingresar fechas, número de personas y número de habitaciones
+        			-> Al presionar el botón, llama a HabitacionesVM.obtenerHabitaciones con los datos del formulario
+
+      			Habitaciones.tsx
+        			-> Lista las habitaciones obtenidas desde HabitacionesVM.habitaciones
+		models/
