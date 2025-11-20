@@ -2,6 +2,8 @@ Realiza la estructura de carpetas y las clases e interfaces necesarias para crea
 que siga una arquitectura limpia y que cumpla los siguiente:
 Se sigue un patrón MVVM.
 Se debe mostrar por pantalla un listado de las habitaciones que tiene el hotel para reservar y el 
+precio total (que será la multiplicación de los días por el precio por noche de  esa habitación).
+No nos preocuparemos por si las habitaciones están reservadas en esas fechas.
 Para mostrar este listado, es necesario una fecha de entrada, una fecha de salida, un número de 
 personas y un número de habitaciones.
 La fecha de entrada debe ser mayor o igual a la de hoy.
