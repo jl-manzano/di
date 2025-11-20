@@ -1,0 +1,98 @@
+Realiza la estructura de carpetas y las clases e interfaces necesarias para crear una aplicación 
+que siga una arquitectura limpia y que cumpla los siguiente:
+Se sigue un patrón MVVM.
+Se debe mostrar por pantalla un listado de las habitaciones que tiene el hotel para reservar y el 
+Para mostrar este listado, es necesario una fecha de entrada, una fecha de salida, un número de 
+personas y un número de habitaciones.
+La fecha de entrada debe ser mayor o igual a la de hoy.
+La fecha de entrada, debe ser mayor a la fecha de salida.
+Nuestras habitaciones son de un máximo de 3 personas, así que si los datos que introduzca el usuario
+debe ser coherente con esto.
+
+(Biblioteca de clases)
+Domain/
+    Entities/
+    Habitacion
+    class Habitacion
+    - numHabitacion int { get }
+    - precioUnitario { get, set }
+    + constructor()
+    + constructor(numHabitacion, precioUnitario)
+
+    DTOs/
+        HabitacionDTO
+        class HabitacionDTO
+        - numHabitacion int { get } 
+        - precioTotal { get, set }
+        + constructor(numHabitacion, precioTotal)
+
+    UseCases/
+        HabitacionesUseCase
+        + class HabitacionesUseCase: IHabitacionesUseCase (implementa)
+            - readonly IHabitacionesRepository _habitacionesRepository (inyecta)
+            - readonly IHabitacionToHabitacionDTO _mapper (inyecta)
+
+            + HabitacionesUseCase(IHabitacionesRepository habitacionesRepository, IHabitacionToHabitacionDTO _mapper)
+                _habitacionesRepository = habitacionesRepository
+                _mapper = mapper
+            
+            + List<HabitacionDTO> getHabitacionesDTO(dateonly fechaEntrada, dateonly fechaSalida, int numeroPersonas, int numeroHabitaciones, double amount?): si las fechas son válidas y la capacidad tambien (llama a las 2 funciones privadas compruebaFecha y compruebaCapacidad) se recorre el listado inyectado del repositorio y se utiliza la funcion del mapper inyectado para mappear de Habitacion a HabitacionDTO y crea un listado de HabitacionDTO y lo devuelve (si no se cumplen las condiciones de las funciones privadas, se lanza una excepción)
+                -> Comprobamos utilizando las funciones privadas que las fechas son adecuadas
+                -> Comprobamos utilizando las funciones privadas que la capacida es adecuada
+                -> Si todo es correcto obtenemos las habitaciones dependiendo del limite maximo de dinero
+                -> Recorremos el listado de habitaciones y usando el mapper lo mapeamos obteniendo un listado de habitaciones dto. Devolvemos este listado
+                -> Si alguna de las comprobaciones anteriores no es correcta lanzamos una excepcion
+
+            - boolean compruebaFecha(dateonly fechaEntrada, dateonly fechaSalida) -> comprueba que la fecha de entrada es mayor o igual a la de hoy y mayor a la de salida
+            - boolean compruebaCapacidad(int numeroPersonas, int numHabitaciones) -> comprueba que la division de personas entre las habitaciones sea menor o igual a 3 
+
+    Interfaces/
+    IHabitacionesUseCase
+        + interface IHabitacionesUseCase
+            + List<HabitacionDTO> getHabitacionesDTO(dateonly fechaEntrada, dateonly fechaSalida, int numeroPersonas, int numeroHabitaciones)
+
+    Repositories/
+    IHabitacionesRepository
+        + interface IHabitacionesRepository
+            + List<Habitacion> getHabitaciones()
+            + List<Habitacion> getHabitacionesByAmount(double amount)
+
+    Mappers/
+        HabitacionToHabitacionDTO
+            + class HabitacionToHabitacionDTO: IHabitacionToHabitacionDTO(implementa)
+                + HabitacionDTO map(Habitacion habitacion, dateonly fechaEntrada, dateonly fechaSalida) -> Multiplica el precio unitario por el numeroDias (se calcula restando la fechaSalida - fechaEntrada)
+                  
+        IHabitacionToHabitacionDTO
+            + interface IHabitacionToHabitacionDTO
+                + HabitacionDTO map(Habitacion habitacion, dateonly fechaEntrada, dateonly fechaSalida)
+
+
+(Biblioteca de clases)
+Data/
+    Repositories/
+    HabitacionesRepository
+        + class HabitacionesRepository: IHabitacionesRepository (implementa)
+        - List<Habitacion> listadoHabitaciones
+        + HabitacionesRepository() -> constructor que crea y devuelve el mock del listado de habitaciones
+        + List<Habitacion> getListadoHabitaciones() - devuelve un listado de habitaciones estático
+        + List<Habitacion> getHabitacionesByAmount(double amount)
+
+
+
+
+(Proyecto)
+Presentation/
+    Controller/
+    HabitacionesController
+    - readonly IHabitacionesUseCase _habitacionesUseCase
+    + HabitacionesController(IHabitacionesUseCase habitacionesUseCase)
+        _habitacionesUseCase = habitacionesUseCase
+    
+    + IActionResult Form -> retorna la vista de un formulario
+
+    [HttpPost]
+    + IActionResult ListadoHabitaciones(dateonly fechaEntrada, dateonly fechaSalida, int numeroPersonas, int numeroHabitaciones) - llama a la funcion del caso de uso que obtiene un listado de HabitacionDTO y se manda a la vista
+
+    Views/
+        Form.cshtml
+        ListadoHabitaciones.cshtml
