@@ -1,12 +1,12 @@
-import { View, Text, StyleSheet } from "react-native";
-import { Stack } from "expo-router";
+import { View, Text, StyleSheet } from 'react-native';
+import { Stack } from 'expo-router';
 
 export default function Register() {
   return (
     <>
       <Stack.Screen
         options={{
-          title: "Nuevo usuario",
+          title: 'Nuevo usuario',
           headerBackVisible: true,
         }}
       />
@@ -20,13 +20,13 @@ export default function Register() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8f9fa", // Lighter background for consistency
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa', // Fondo más claro para consistencia
   },
   text: {
     fontSize: 22,
-    fontWeight: "700",
-    color: "#333",
+    fontWeight: '700',
+    color: '#333',
   },
 });
