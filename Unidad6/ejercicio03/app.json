@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "02",
-    "slug": "02",
+    "name": "ejercicio03",
+    "slug": "ejercicio03",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "02",
+    "scheme": "ejercicio03",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
