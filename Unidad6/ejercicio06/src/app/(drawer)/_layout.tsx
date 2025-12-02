@@ -1,4 +1,3 @@
-// src/app/(drawer)/_layout.tsx
 import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet } from 'react-native';
@@ -23,9 +22,8 @@ export default function DrawerLayout() {
         },
       }}
     >
-      {/* Pantalla de Inicio que llevará a Tabs */}
       <Drawer.Screen
-        name="tabs"
+        name="index"
         options={{
           title: "Inicio",
           drawerIcon: ({ color, size }) => (
@@ -33,17 +31,6 @@ export default function DrawerLayout() {
           ),
         }}
       />
-      {/* Pantalla de Perfil */}
-      <Drawer.Screen
-        name="profile"
-        options={{
-          title: "Perfil",
-          drawerIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      {/* Pantalla de Configuración */}
       <Drawer.Screen
         name="settings"
         options={{
