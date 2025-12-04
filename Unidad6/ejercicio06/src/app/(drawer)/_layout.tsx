@@ -23,7 +23,7 @@ export default function DrawerLayout() {
       }}
     >
       <Drawer.Screen
-        name="index"
+        name="(tabs)"
         options={{
           title: "Inicio",
           drawerIcon: ({ color, size }) => (
