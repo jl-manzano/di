@@ -1,5 +1,5 @@
-const TYPES = {
-    IRepositoryPersonas: Symbol.for("IRepositoryPersonas"),
-    IndexVM: Symbol.for("IndexVM"),
+export const TYPES = {
+  IPersonasRepository: Symbol.for("IPersonasRepository"),
+  IPersonasUseCases: Symbol.for("IPersonasUseCases"),
+  PeopleListVM: Symbol.for("PeopleListVM"),
 };
-export { TYPES };

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "PeopleListDI",
-    "slug": "PeopleListDI",
+    "name": "PeopleListDI2",
+    "slug": "PeopleListDI2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "peoplelistdi",
+    "scheme": "peoplelistdi2",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

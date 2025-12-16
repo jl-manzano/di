@@ -1,18 +1,24 @@
 import { Container } from "inversify";
 import "reflect-metadata";
-import { PersonasRepository } from "../Data/personasRepository";
-import { IRepositoryPersonas } from "../Domain/Interfaces/IRepositoryPersonas";
-import { PeopleListVM } from "../UI/viewmodels/PeopleListVM";
+import { TYPES } from "./types";
 
-const TYPES = {
-    IRepositoryPersonas: Symbol.for("IRepositoryPersonas"),
-    IndexVM: Symbol.for("IndexVM"),
-};
+// Asumiendo que estas son las rutas correctas para el repositorio de la API
+import { PersonasRepository } from "../Data/personasRepository"; 
+import { IPersonasRepository } from "../Domain/Interfaces/IPersonasRepository"
+
+import { PersonasUseCases } from "../Domain/UseCases/PersonasUseCases";
+import { IPersonasUseCases } from "../Domain/Interfaces/IPersonasUseCases";
+
+import { PeopleListVM } from "../UI/ViewModels/PeopleListVM";
 
 const container = new Container();
 
-// Vinculamos la interfaz con su implementación concreta
-container.bind<IRepositoryPersonas>(TYPES.IRepositoryPersonas).to(PersonasRepository);
-container.bind<PeopleListVM>(TYPES.IndexVM).to(PeopleListVM);
+container.bind<IPersonasRepository>(TYPES.IPersonasRepository).to(PersonasRepository);
 
-export { container, TYPES };
+container.bind<IPersonasUseCases>(TYPES.IPersonasUseCases).to(PersonasUseCases);
+
+container.bind<PeopleListVM>(TYPES.PeopleListVM).to(PeopleListVM);
+
+export { container };
+
+// NOTA: La definición de TYPES se ELIMINA de este archivo.

@@ -1,36 +1,45 @@
-import { inject } from "inversify";
-import { TYPES } from "../../Core/types";
-import { IRepositoryPersonas } from "../../Domain/Interfaces/IRepositoryPersonas";
 import { makeAutoObservable } from "mobx";
+import { inject, injectable } from "inversify";
+import { TYPES } from "../../Core/types";
+import { IPersonasUseCases } from "../../Domain/Interfaces/IPersonasUseCases";
 import { Persona } from "../../Domain/Entities/Persona";
 
+@injectable()
 export class PeopleListVM {
-    private _personasList: Persona[] = [];
-    private _personaSeleccionada: Persona;
 
-    constructor(
-        @inject(TYPES.IRepositoryPersonas)
-        private RepositoryPersonas: IRepositoryPersonas
-    ) {
-        this._personaSeleccionada = new Persona(0, 'Sofyan', 'Amrabat');
-        this.loadPersonas(); // Cargar las personas de manera asíncrona
-    }
+  private _personasList: Persona[] = [];
+  private _personaSeleccionada: Persona;
+  private isLoading: boolean = false;
 
-    // Cargar personas
-    private async loadPersonas() {
-        this._personasList = await this.RepositoryPersonas.getListadoCompletoPersonas();
-        makeAutoObservable(this); // Hacemos que mobx observe este objeto
-    }
+  constructor(
+    @inject(TYPES.IPersonasUseCases)
+    private personasUseCases: IPersonasUseCases
+  ) {
+    this._personaSeleccionada = new Persona(0, "Selecciona", "una persona");
+    makeAutoObservable(this);
+  }
 
-    public get personasList(): Persona[] {
-        return this._personasList;
-    }
+  get personasList(): Persona[] {
+    return this._personasList;
+  }
 
-    public get personaSeleccionada(): Persona {
-        return this._personaSeleccionada;
-    }
+  get personaSeleccionada(): Persona {
+    return this._personaSeleccionada;
+  }
 
-    public set personaSeleccionada(value: Persona) {
-        this._personaSeleccionada = value;
+  set personaSeleccionada(value: Persona) {
+    this._personaSeleccionada = value;
+  }
+
+  async cargarPersonas() {
+    this.isLoading = true;
+    try {
+      const personas = await this.personasUseCases.getListadoCompleto();
+      this._personasList = personas;
+    } catch (error) {
+      console.error("Error al cargar personas:", error);
+    } finally {
+      this.isLoading = false;
     }
+  }
 }

@@ -1,11 +1,19 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target": "ES6",                          // Asegúrate de usar ES6 o superior
-    "module": "ESNext",                       // O puedes usar "CommonJS" dependiendo de tu configuración
-    "jsx": "react-native",                    // Para React Native
-    "allowSyntheticDefaultImports": true,     // Habilita las importaciones por defecto
-    "esModuleInterop": true,                  // Asegura que la interoperabilidad con módulos sea correcta
-    "moduleResolution": "node",               // Usualmente "node" es una opción correcta
-    "strict": true
-  }
+    "strict": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }
