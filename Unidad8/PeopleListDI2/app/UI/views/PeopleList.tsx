@@ -1,63 +1,101 @@
 import React, { useRef, useEffect } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View, SafeAreaView } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { observer } from "mobx-react-lite";
 import { container } from "../../Core/container";
 import { TYPES } from "../../Core/types";
-import { PeopleListVM } from "../ViewModels/PeopleListVM";
+import { PeopleListVM } from "../viewmodels/PeopleListVM";
 import { Persona } from "../../Domain/Entities/Persona";
 
-// Colores para el tema
+// --- PALETA REAL BETIS ---
 const VERDE_BETIS = "#00A650";
+const VERDE_CLARO = "#7BC043";
 const BLANCO = "#FFFFFF";
 const GRIS_CLARO = "#F5F5F5";
 const GRIS_MEDIO = "#E0E0E0";
+const TEXTO_GRIS = "#666666";
 
 const PeopleList = observer(() => {
   const vmRef = useRef<PeopleListVM | null>(null);
 
-  // Inicialización del ViewModel
+  // Initializing the ViewModel
   if (vmRef.current === null) {
+    console.log('🔧 Inicializando ViewModel...');
     vmRef.current = container.get<PeopleListVM>(TYPES.PeopleListVM);
   }
 
   const viewModel = vmRef.current;
 
-  // Cargar personas al montar el componente
+  // Load people when the component mounts
   useEffect(() => {
+    console.log('🚀 Componente montado, cargando personas...');
     viewModel.cargarPersonas();
-  }, [viewModel]);
+  }, []);
 
   const renderItem = ({ item, index }: { item: Persona; index: number }) => {
     const isSelected = viewModel.personaSeleccionada?.id === item.id;
+    
+    console.log(`🔍 Renderizando item ${index}: ${item.nombre} - Seleccionado: ${isSelected}`);
 
     return (
       <Pressable
-        onPress={() => { viewModel.personaSeleccionada = item; }}
-        style={[styles.card, isSelected && styles.cardSelected]} // Mejorada la condición para simplificar el código
+        onPress={() => {
+          console.log('👆 CLICK en:', item.nombre, item.apellidos);
+          Alert.alert('Click', `Seleccionaste: ${item.nombre} ${item.apellidos}`);
+          viewModel.personaSeleccionada = item;
+          console.log('✅ Después de asignar, personaSeleccionada es:', viewModel.personaSeleccionada?.nombre);
+        }}
+        style={({ pressed }) => [
+          styles.playerCard,
+          isSelected && styles.playerCardSelected,
+          pressed && { opacity: 0.7 }
+        ]}
       >
+        <View style={[styles.sideStripe, isSelected && styles.sideStripeActive]} />
         <View style={styles.cardContent}>
-          <View style={styles.numberBadge}>
-            <Text style={styles.numberText}>{index + 1}</Text>
-          </View>
-          
-          <View style={styles.textContainer}>
-            <Text style={styles.nameText}>
-              {item.nombre}
-            </Text>
-            <Text style={styles.surnameText}>
-              {item.apellidos}
+          {/* Contact number */}
+          <View style={[styles.dorsalContainer, isSelected && styles.dorsalActive]}>
+            <Text style={[styles.dorsalNumber, isSelected && styles.dorsalNumberActive]}>
+              {index + 1}
             </Text>
           </View>
 
-          {isSelected && (
-            <View style={styles.checkmark}>
-              <Text style={styles.checkmarkText}>✓</Text>
-            </View>
-          )}
+          {/* Avatar circle with initial */}
+          <View style={[styles.avatarCircle, isSelected && styles.avatarCircleActive]}>
+            <Text style={[styles.avatarInitial, isSelected && styles.avatarInitialActive]}>
+              {item.nombre.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+
+          {/* Person information */}
+          <View style={styles.playerInfo}>
+            <Text style={[styles.playerName, isSelected && styles.playerNameActive]}>
+              {item.nombre}
+            </Text>
+            <Text style={[styles.playerSurname, isSelected && styles.playerSurnameActive]}>
+              {item.apellidos}
+            </Text>
+            {isSelected && (
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>ACTIVO</Text>
+              </View>
+            )}
+          </View>
         </View>
       </Pressable>
     );
   };
+
+  console.log('🎨 Renderizando componente. Personas:', viewModel.personasList.length);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,15 +104,32 @@ const PeopleList = observer(() => {
         <Text style={styles.headerSubtitle}>
           {viewModel.personasList.length} contactos
         </Text>
+        {viewModel.personaSeleccionada && (
+          <Text style={styles.selectedInfo}>
+            Seleccionado: {viewModel.personaSeleccionada.nombre} {viewModel.personaSeleccionada.apellidos}
+          </Text>
+        )}
       </View>
 
-      <FlatList
-        data={viewModel.personasList}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {viewModel.isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={VERDE_BETIS} />
+          <Text style={styles.loadingText}>Cargando personas...</Text>
+        </View>
+      ) : viewModel.personasList.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.emptyText}>No hay personas para mostrar</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={viewModel.personasList}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          extraData={viewModel.personaSeleccionada}
+        />
+      )}
     </SafeAreaView>
   );
 });
@@ -82,104 +137,180 @@ const PeopleList = observer(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0A0E27", // Fondo oscuro
+    backgroundColor: BLANCO,
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 177, 64, 0.1)", // Ligeramente opaco para el borde
+    paddingTop: 16,
+    paddingBottom: 20,
+    backgroundColor: VERDE_BETIS,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#FFFFFF", // Blanco
-    marginBottom: 8,
+    color: BLANCO,
+    fontSize: 36,
+    fontWeight: "900",
+    letterSpacing: 1,
   },
   headerSubtitle: {
+    color: BLANCO,
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.6)", // Gris claro para el subtítulo
     fontWeight: "500",
+    opacity: 0.7,
+    marginTop: 4,
+  },
+  selectedInfo: {
+    color: BLANCO,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 8,
+    borderRadius: 6,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    color: TEXTO_GRIS,
+    fontSize: 14,
+  },
+  emptyText: {
+    color: TEXTO_GRIS,
+    fontSize: 16,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
-  card: {
-    backgroundColor: "#151A3D", // Color oscuro de las tarjetas
-    borderRadius: 16,
+  playerCard: {
+    backgroundColor: BLANCO,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 12,
+    overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: GRIS_MEDIO,
   },
-  cardSelected: {
-    backgroundColor: "#1A2F24", // Fondo más oscuro para los elementos seleccionados
-    borderColor: "#00B140", // Verde para la selección
-    shadowColor: "#00B140", // Sombra verde
-    shadowOpacity: 0.4,
+  playerCardSelected: {
+    backgroundColor: "#F0FAF4",
+    borderColor: VERDE_BETIS,
+    shadowColor: VERDE_BETIS,
+    shadowOpacity: 0.2,
     shadowRadius: 12,
-    elevation: 8,
+    elevation: 6,
   },
   cardContent: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    gap: 16,
   },
-  numberBadge: {
+  sideStripe: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 6,
+    backgroundColor: GRIS_MEDIO,
+  },
+  sideStripeActive: {
+    backgroundColor: VERDE_BETIS,
+    width: 8,
+  },
+  dorsalContainer: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 8,
+    backgroundColor: GRIS_CLARO,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: GRIS_MEDIO,
   },
-  numberText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "rgba(255, 255, 255, 0.6)", // Gris claro
+  dorsalActive: {
+    backgroundColor: VERDE_BETIS,
+    borderColor: VERDE_BETIS,
   },
-  textContainer: {
+  dorsalNumber: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: TEXTO_GRIS,
+  },
+  dorsalNumberActive: {
+    color: BLANCO,
+  },
+  avatarCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: GRIS_CLARO,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+    borderWidth: 3,
+    borderColor: GRIS_MEDIO,
+  },
+  avatarCircleActive: {
+    backgroundColor: VERDE_CLARO,
+    borderColor: VERDE_BETIS,
+  },
+  avatarInitial: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: TEXTO_GRIS,
+  },
+  avatarInitialActive: {
+    color: BLANCO,
+  },
+  playerInfo: {
     flex: 1,
-    gap: 4,
   },
-  nameText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#FFFFFF", // Blanco
-    letterSpacing: 0.3,
+  playerName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 2,
   },
-  surnameText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: "rgba(255, 255, 255, 0.5)", // Gris claro para apellidos
-    letterSpacing: 0.2,
+  playerNameActive: {
+    color: VERDE_BETIS,
   },
-  checkmark: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#00B140", // Verde para la selección
-    justifyContent: "center",
+  playerSurname: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: TEXTO_GRIS,
+  },
+  playerSurnameActive: {
+    color: "#555",
+  },
+  statusBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#00B140", // Sombra verde para el checkmark
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 4,
+    marginTop: 6,
+    backgroundColor: VERDE_BETIS,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
   },
-  checkmarkText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFFFFF", // Blanco para el checkmark
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: BLANCO,
+    marginRight: 6,
+  },
+  statusText: {
+    color: BLANCO,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
 });
 

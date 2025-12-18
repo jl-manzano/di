@@ -9,7 +9,7 @@ import { IPersonasRepository } from "../Domain/Interfaces/IPersonasRepository"
 import { PersonasUseCases } from "../Domain/UseCases/PersonasUseCases";
 import { IPersonasUseCases } from "../Domain/Interfaces/IPersonasUseCases";
 
-import { PeopleListVM } from "../UI/ViewModels/PeopleListVM";
+import { PeopleListVM } from "../UI/viewmodels/PeopleListVM";
 
 const container = new Container();
 
