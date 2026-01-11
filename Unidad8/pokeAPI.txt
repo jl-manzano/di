@@ -45,7 +45,7 @@ src/
             PokemonUseCases: IPokemonUseCases
                 IPokemonRepository _listadoPokemonRepository
                 PokemonUseCases(IPokemonRepository listadoPokemonRepository) { _listadoPokemonRepository = listadoPokemonRepository }
-                execute(limit, offset) -> llamaal repositorio pasando los parámetros de paginación
+                execute(limit, offset) -> llama al repositorio pasando los parámetros de paginación
     vm/
         List<Pokemon> listadoPokemons
         offset: number(control de paginación, inicio en 0)

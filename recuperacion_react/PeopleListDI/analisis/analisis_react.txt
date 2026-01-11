@@ -1,0 +1,230 @@
+src/
+    App/
+        index.tsx
+            + function JuegoScreen()
+                -> Refs: vmRef (JuegoVM), scrollRef (ScrollView)
+                -> Estado: alertY
+                -> useEffect: Carga personas al montar
+                -> Función: handleComprobarYScroll -> Comprueba y hace scroll arriba
+                -> Funciones de render:
+                    * renderHeader: Título y subtítulo
+                    * renderHint: Caja con pista
+                    * renderAlert: Mensaje de resultado (si existe)
+                    * renderTableHeader: Headers de tabla
+
+                    -> Renderiza: 
+                    * SafeAreaView > ScrollView > Card
+                    * Header, Hint, Alert
+                    * Loading o FlatList de PersonaItem
+                    * BotonComprobar
+            
+            _layout.tsx
+        
+    Core/
+        types.ts
+
+        container.ts
+            // Core
+            container.bind<BaseApi>(TYPES.BaseApi).to(BaseApi).inSingletonScope();
+
+            // Repositories
+            container.bind<IPersonasRepository>(TYPES.IPersonasRepository).to(PersonasRepository);
+            container.bind<IDepartamentosRepository>(TYPES.IDepartamentosRepository).to(DepartamentosRepository);
+
+            // UseCases
+            container.bind<IPersonasUseCases>(TYPES.IPersonasUseCases).to(PersonasUseCases);
+            container.bind<IDepartamentosUseCases>(TYPES.IDepartamentosUseCases).to(DepartamentosUseCases);
+
+            // Mappers (Domain)
+            container.bind<IPersonaToPersonaDTO>(TYPES.IPersonaToPersonaDTO).to(PersonaToPersonaDTO);
+
+            // Mappers (UI)
+            container.bind<IDomainToUI>(TYPES.IDomainToUI).to(DomainToUI);
+
+            // ViewModels
+            container.bind<JuegoVM>(TYPES.JuegoVM).to(JuegoVM);
+
+        BaseApi.ts
+            @injectable()
+            + class BaseApi
+                - readonly BASE_URL: string = "https://ui20251201142043-dnhvdfbxdbh9bnbt.spaincentral-01.azurewebsites.net"
+                + getBaseUrl(endpoint: string): string -> Combina BASE_URL con endpoint y devuelve URL completa
+                + getDefaultHeaders(): HeadersInit -> Devuelve headers por defecto con Content-Type: application/json
+
+    Domain/
+        Entities/
+            Persona.ts
+                + class Persona
+                    - _id: int { get; set; }
+                    - _nombre: string { get; set; }
+                    - _apellidos: string { get; set; }
+                    - _fechaNac: Date { get; set; }
+                    - _direccion: string { get; set; }
+                    - _telefono: string { get; set; }
+                    - _foto: string { get; set; }
+                    - _idDepartamento: int { get; set; }
+                    + Persona()
+                    + Persona(id: int, nombre: string, apellidos: string, fechaNac: Date, direccion: string, telefono: string, foto: string, idDepartamento: int)
+                    
+            Departamento.ts
+                + class Departamento
+                    - _idDepartamento: int { get; set; }
+                    - _nombreDepartamento: string { get; set; }
+                    + Departamento(idDepartamento: int, nombreDepartamento: string)
+
+        DTOs/
+            PersonaDTO.ts
+                + class PersonaDTO
+                    - _id: int { get; }
+                    - _nombre: string { get; }
+                    - _apellidos: string { get; }
+                    - _idDepartamento: int { get; }
+                    + PersonaDTO(id: int, nombre: string, apellidos: string, idDepartamento: int)
+
+            PersonaConListadoDepartamento.ts
+                + class PersonaConListadoDepartamento
+                    + persona: PersonaDTO { get; }
+                    + listadoDepartamentos: Departamento[] { get; }
+                    + PersonaConListadoDepartamento(persona: PersonaDTO, listadoDepartamentos: Departamento[])
+
+            PersonaConDepartamentoSeleccionado.ts
+                + class PersonaConDepartamentoSeleccionado
+                    - _persona: PersonaDTO { get; }
+                    - _departamento: Departamento { get; }
+                    + PersonaConDepartamentoSeleccionado(persona: PersonaDTO, departamento: Departamento)
+
+        Interfaces/
+            Persona/
+                IPersonasRepository.ts
+                    + interface IPersonasRepository
+                        + getListadoCompletoPersonas(): Promise<Persona[]>
+
+                IPersonasUseCases.ts
+                    + interface IPersonasUseCases
+                        + getPersonas(): Promise<PersonaConListadoDepartamento[]>
+                        + comprobarAciertos(personas: PersonaConDepartamentoSeleccionado[]): int
+
+            Departamento/
+                IDepartamentosRepository.ts
+                    + interface IDepartamentosRepository
+                        + getListadoDepartamentos(): Promise<Departamento[]>
+
+                IDepartamentosUseCases.ts
+                    + interface IDepartamentosUseCases
+                        + getDepartamentos(): Promise<Departamento[]>
+
+        Mappers/
+            IPersonaToPersonaDTO.ts
+                + interface IPersonaToPersonaDTO
+                    + map(persona: Persona): PersonaDTO
+
+            PersonaToPersonaDTO.ts
+                @injectable()
+                + class PersonaToPersonaDTO implements IPersonaToPersonaDTO
+                    + map(persona: Persona): PersonaDTO -> Crea y devuelve PersonaDTO con solo id, nombre, apellidos, idDepartamento
+
+        UseCases/
+            PersonasUseCases.ts
+                @injectable()
+                + class PersonasUseCases implements IPersonasUseCases
+                    - personasRepository: IPersonasRepository
+                    - departamentosUseCases: IDepartamentosUseCases
+                    - personaMapper: IPersonaToPersonaDTO
+                    + PersonasUseCases(@inject(TYPES.IPersonasRepository) personasRepository: IPersonasRepository,
+                                       @inject(TYPES.IDepartamentosUseCases) departamentosUseCases: IDepartamentosUseCases,
+                                       @inject(TYPES.IPersonaToPersonaDTO) personaMapper: IPersonaToPersonaDTO)
+                    + async getPersonas(): Promise<PersonaConListadoDepartamento[]> -> Obtiene personas del repositorio, mapea cada Persona a PersonaDTO,
+                                                                                       obtiene departamentos, crea PersonaConListadoDepartamento y lo devuelve
+                    + comprobarAciertos(personas: PersonaConDepartamentoSeleccionado[]): int -> Recorre las personas seleccionadas y compara el idDepartamento
+                                                                                                 de la persona DTO con el departamento seleccionado, suma aciertos
+
+            DepartamentosUseCases.ts
+                @injectable()
+                + class DepartamentosUseCases implements IDepartamentosUseCases
+                    - departamentosRepository: IDepartamentosRepository
+                    + DepartamentosUseCases(@inject(TYPES.IDepartamentosRepository) departamentosRepository: IDepartamentosRepository)
+                    + async getDepartamentos(): Promise<Departamento[]> -> Devuelve los departamentos del repositorio
+
+    Data/
+        Repositories/
+            PersonasRepository.ts
+                @injectable()
+                + class PersonasRepository implements IPersonasRepository
+                    - baseApi: BaseApi
+                    + PersonasRepository(@inject(TYPES.BaseApi) baseApi: BaseApi)
+                    + async getListadoCompletoPersonas(): Promise<Persona[]> -> Usa baseApi.getBaseUrl("/api/Personas") y baseApi.getDefaultHeaders(),
+                                                                                 hace fetch, mapea response a Persona[] completa
+
+            DepartamentosRepository.ts
+                @injectable()
+                + class DepartamentosRepository implements IDepartamentosRepository
+                    - baseApi: BaseApi
+                    + DepartamentosRepository(@inject(TYPES.BaseApi) baseApi: BaseApi)
+                    + async getListadoDepartamentos(): Promise<Departamento[]> -> Usa baseApi.getBaseUrl("/api/Departamentos") y baseApi.getDefaultHeaders(),
+                                                                                   hace fetch, soporta múltiples formatos de naming (id/ID/Id, nombre/Nombre),
+                                                                                   mapea response a Departamento[]
+
+    UI/
+        Mappers/
+            IDomainToUI.ts
+                + interface IDomainToUI
+                    + transformar(persona: PersonaConListadoDepartamento): PersonaConColor
+
+            DomainToUI.ts
+                @injectable()
+                + class DomainToUI implements IDomainToUI
+                    - _colores: string[] = ["rojo", "azul", "naranja", "verde"]
+                    + DomainToUI()
+                    + transformar(persona: PersonaConListadoDepartamento): PersonaConColor -> Obtiene color según idDepartamento de la persona,
+                                                                                               crea y devuelve PersonaConColor
+
+        Models/
+            PersonaConColor.ts
+                + class PersonaConColor
+                    + persona: PersonaDTO { get; }
+                    + departamentos: Departamento[] { get; }
+                    + colorDepartamento: string { get; }
+                    + PersonaConColor(persona: PersonaDTO, departamentos: Departamento[], colorDepartamento: string)
+
+        ViewModels/
+            JuegoVM.ts
+                @injectable()
+                + class JuegoVM
+                    - _personasConColor: PersonaConColor[] = [] { get; }
+                    - _selecciones: Map<int, int> = new Map() { get; }
+                    - _mensaje: string = "" { get; }
+                    - _tipoMensaje: "success" | "warning" | "" = "" { get; }
+                    - _isLoading: boolean = false { get; }
+                    - personasUseCases: IPersonasUseCases
+                    - mapper: IDomainToUI
+                    + JuegoVM(@inject(TYPES.IPersonasUseCases) personasUseCases: IPersonasUseCases,
+                              @inject(TYPES.IDomainToUI) mapper: IDomainToUI)
+                        + async cargarPersonas(): Promise<void> (action) -> Llama a personasUseCases.getPersonas(), mapea cada una con el mapper,
+                                                                            actualiza _personasConColor con makeObservable
+                        + handleSeleccion(personaId: int, departamentoId: int): void (action) -> Guarda la selección en el Map
+                        + async handleComprobar(): Promise<void> (action) -> Construye PersonaConDepartamentoSeleccionado[] desde las selecciones,
+                                                                            llama a comprobarAciertos(), actualiza mensaje según resultado (victoria o aciertos parciales)
+
+        Components/
+            PersonaItem.tsx
+                - Props: personaConColor, onSeleccion
+                - Estado: selectedDepartamento
+                - Función: handleSeleccion
+                - Renderiza: Fila de tabla con color de fondo, nombre, apellidos y Picker
+
+            MensajeResultado.tsx
+                - Props: mensaje, tipo
+                - Renderiza: Alert con estilos según tipo (success/warning)
+
+            BotonComprobar.tsx
+                - Props: onPress, disabled
+                - Renderiza: Botón TouchableOpacity para comprobar respuestas
+
+            Header.tsx
+                - Renderiza: Título y subtítulo del juego
+
+            Hint.tsx
+                - Renderiza: Caja con pista sobre los colores
+
+            TableHeader.tsx
+                - Renderiza: Encabezados de la tabla (Nombre, Apellidos, Departamento)
