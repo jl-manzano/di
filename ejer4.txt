@@ -1,0 +1,84 @@
+src
+├── di
+│   ├── types
+│   └── container
+│
+├── domain
+│   ├── entities
+│   │   ├── Persona
+│   │   └── Departamento
+│   │
+│   ├── dtos
+│   │   ├── PersonaDTO (todos los atributos de persona + nombre de dpto)
+│   │   └── DepartamentoDTO (id y nombre; este dto se hace pensando que dpto podria cambiar en un futuro)
+│   │
+│   └── interfaces
+│       ├── repositories
+│       │   ├── PersonaRepository (métodos crud para la gestión de personas)
+│       │   └── DepartamentoRepository (métodos crud para la gestión de departamentos)
+│       │
+│       └── useCases
+│           ├── GetPersonasUseCase
+│           ├── AddPersonaUseCase
+│           ├── UpdatePersonaUseCase
+│           ├── DeletePersonaUseCase
+│           ├── GetDepartamentosUseCase
+│           ├── AddDepartamentoUseCase
+│           ├── UpdateDepartamentoUseCase
+│           └── DeleteDepartamentoUseCase
+│
+└── useCases
+    ├── personas
+    │   ├── GetPersonas
+    │   ├── AddPersona
+    │   ├── UpdatePersona
+    │   └── DeletePersona
+    │
+    └── departamentos
+        ├── GetDepartamentos
+        ├── AddDepartamento
+        ├── UpdateDepartamento
+        └── DeleteDepartamento
+data
+├── datasources
+│
+├── api
+│   ├── PersonaApi
+│   └── DepartamentoApi
+│
+└── repositories
+│    ├── PersonaRepositoryImpl (implements repository interface)
+│    └── DepartamentoRepositoryImpl (implements repository interface)
+│
+presentation
+├── models
+│   ├── PersonaUIModel (podriamos añadir color); (mismas propiedades que los dto pero añadiendo props visuales)
+│   └── DepartamentoUIModel
+│
+├── viewmodels
+│   ├── personas
+│   │   ├── PersonasViewModel (singleton) (listado personas, personaSeleccionada, constructor, casos de uso implementados...)
+│   │
+│   └── departamentos
+│       ├── DepartamentosViewModel (singleton) (listado departamentos, departamentoSeleccionado, constructor, casos de uso implementados...)
+│
+├── views (iria en src/app)
+│   ├── screens
+│   │   ├── WelcomeScreen
+│   │   │
+│   │   ├── personas
+│   │   │   ├── ListadoPersonasScreen
+│   │   │   └── EditarInsertarPersonaScreen
+│   │   │
+│   │   └── departamentos
+│   │       ├── ListadoDepartamentosScreen
+│   │       └── EditarInsertarDepartamentoScreen
+│   │
+│   └── components (irian fuera de src/app)
+│       ├── personas
+│       │   └── PersonaListItem
+│       │
+│       └── departamentos
+│           └── DepartamentoListItem
+│
+└── App
