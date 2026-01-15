@@ -3,21 +3,22 @@ import { container } from '../../Core/container';
 import { TYPES } from '../../Core/types';
 import { DepartamentoUseCases } from '../../Domain/UseCases/DepartamentoUseCases'; // Importamos solo DepartamentoUseCases
 import { Departamento } from '../../Domain/Entities/Departamento';
+import { DepartamentoUIModel, toDepartamentoUIModel } from '../Models/DepartamentoUIModel';
 
 export class DepartamentosViewModel {
   private static instance: DepartamentosViewModel;
-  
-  departamentos: Departamento[] = []; // Ahora usamos directamente la entidad Departamento
-  departamentoSeleccionado: Departamento | null = null; // También usamos la entidad Departamento
+
+  departamentos: DepartamentoUIModel[] = [];
+  departamentoSeleccionado: DepartamentoUIModel | null = null;
   isLoading = false;
   error: string | null = null;
 
-  private departamentoUseCases: DepartamentoUseCases; // Solo usamos DepartamentoUseCases
+  private departamentoUseCases: DepartamentoUseCases;
 
   private constructor() {
     makeAutoObservable(this);
 
-    this.departamentoUseCases = container.get<DepartamentoUseCases>(TYPES.DepartamentoUseCases); // Inyectamos solo DepartamentoUseCases
+    this.departamentoUseCases = container.get<DepartamentoUseCases>(TYPES.DepartamentoUseCases);
   }
 
   static getInstance(): DepartamentosViewModel {
@@ -38,11 +39,11 @@ export class DepartamentosViewModel {
   async loadDepartamentos() {
     this.setLoadingState(true);
     this.setErrorState(null);
-    
+
     try {
-      const departamentos = await this.departamentoUseCases.getDepartamentos(); // Usamos el caso de uso para obtener departamentos
+      const departamentos = await this.departamentoUseCases.getDepartamentos();
       runInAction(() => {
-        this.departamentos = departamentos; // Asignamos directamente las entidades Departamento
+        this.departamentos = departamentos.map(toDepartamentoUIModel);
         this.setLoadingState(false);
       });
     } catch (err) {
@@ -62,8 +63,8 @@ export class DepartamentosViewModel {
     this.setErrorState(null);
 
     try {
-      await this.departamentoUseCases.addDepartamento(departamento); // Usamos el caso de uso para agregar departamento
-      await this.loadDepartamentos(); // Refresh the list after adding
+      await this.departamentoUseCases.addDepartamento(departamento);
+      await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al agregar departamento');
     }
@@ -74,8 +75,8 @@ export class DepartamentosViewModel {
     this.setErrorState(null);
 
     try {
-      await this.departamentoUseCases.updateDepartamento(departamento); // Usamos el caso de uso para actualizar departamento
-      await this.loadDepartamentos(); // Refresh the list after updating
+      await this.departamentoUseCases.updateDepartamento(departamento);
+      await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al actualizar departamento');
     }
@@ -86,14 +87,14 @@ export class DepartamentosViewModel {
     this.setErrorState(null);
 
     try {
-      await this.departamentoUseCases.deleteDepartamento(id); // Usamos el caso de uso para eliminar departamento
-      await this.loadDepartamentos(); // Refresh the list after deleting
+      await this.departamentoUseCases.deleteDepartamento(id);
+      await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al eliminar departamento');
     }
   }
 
-  selectDepartamento(departamento: Departamento | null) { // Usamos directamente la entidad Departamento
+  selectDepartamento(departamento: DepartamentoUIModel | null) {
     this.departamentoSeleccionado = departamento;
   }
 }

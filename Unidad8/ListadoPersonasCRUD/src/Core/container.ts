@@ -9,14 +9,8 @@ import { PersonaApi } from '../Data/API/PersonaAPI';
 import { DepartamentoApi } from '../Data/API/DepartamentoAPI';
 
 // Repositories
-import { IPersonaRepository } from '../Domain/Interfaces/Persona/IPersonaRepository';
-import { IDepartamentoRepository } from '../Domain/Interfaces/Departamento/IDepartamentoRepository';
 import { PersonaRepository } from '../Data/Repositories/PersonaRepository';
-import { DepartamentoRepositoryImpl } from '../Data/Repositories/DepartamentoRepository';
-
-// Use Cases Interfaces
-import { IPersonaUseCases } from '../Domain/Interfaces/Persona/IPersonaUseCases';
-import { IDepartamentoUseCases } from '../Domain/Interfaces/Departamento/IDepartamentoUseCases';
+import { DepartamentoRepository } from '../Data/Repositories/DepartamentoRepository';
 
 // Use Cases Implementations
 import { PersonaUseCases } from '../Domain/UseCases/PersonaUseCases';
@@ -32,13 +26,11 @@ container.bind<PersonaApi>(TYPES.PersonaApi).to(PersonaApi).inSingletonScope();
 container.bind<DepartamentoApi>(TYPES.DepartamentoApi).to(DepartamentoApi).inSingletonScope();
 
 // Bind Repositories
-container.bind<IPersonaRepository>(TYPES.PersonaRepository).to(PersonaRepository).inSingletonScope(); // Cambié a la interfaz IPersonaRepository
-container.bind<IDepartamentoRepository>(TYPES.DepartamentoRepository).to(DepartamentoRepositoryImpl).inSingletonScope(); // Cambié a la interfaz IDepartamentoRepository
+container.bind<PersonaRepository>(TYPES.PersonaRepository).to(PersonaRepository).inSingletonScope();
+container.bind<DepartamentoRepository>(TYPES.DepartamentoRepository).to(DepartamentoRepository).inSingletonScope();
 
-// Bind Use Cases - Personas
-container.bind<IPersonaUseCases>(TYPES.PersonaUseCases).to(PersonaUseCases).inSingletonScope(); // Cambié a la interfaz IPersonaUseCases
-
-// Bind Use Cases - Departamentos
-container.bind<IDepartamentoUseCases>(TYPES.DepartamentoUseCases).to(DepartamentoUseCases).inSingletonScope(); // Cambié a la interfaz IDepartamentoUseCases
+// Bind Use Cases
+container.bind<PersonaUseCases>(TYPES.PersonaUseCases).to(PersonaUseCases);
+container.bind<DepartamentoUseCases>(TYPES.DepartamentoUseCases).to(DepartamentoUseCases);
 
 export { container };

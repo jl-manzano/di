@@ -7,12 +7,10 @@ export const TYPES = {
   DepartamentoApi: Symbol.for('DepartamentoApi'),
   
   // Repositories
-  PersonaRepository: Symbol.for('IPersonaRepository'),  // Interfaz IPersonaRepository
-  DepartamentoRepository: Symbol.for('IDepartamentoRepository'),  // Interfaz IDepartamentoRepository
+  PersonaRepository: Symbol.for('PersonaRepository'),
+  DepartamentoRepository: Symbol.for('DepartamentoRepository'),
   
-  // Use Cases - Personas
-  PersonaUseCases: Symbol.for('IPersonaUseCases'),  // Interfaz IPersonaUseCases
-  
-  // Use Cases - Departamentos
-  DepartamentoUseCases: Symbol.for('IDepartamentoUseCases'),  // Interfaz IDepartamentoUseCases
+  // Use Cases (agregados como clases únicas)
+  PersonaUseCases: Symbol.for('PersonaUseCases'),
+  DepartamentoUseCases: Symbol.for('DepartamentoUseCases'),
 };

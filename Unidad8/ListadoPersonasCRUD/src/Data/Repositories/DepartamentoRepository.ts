@@ -5,7 +5,7 @@ import { DepartamentoApi } from '../API/DepartamentoAPI';
 import { TYPES } from '../../Core/types';
 
 @injectable()
-export class DepartamentoRepositoryImpl implements IDepartamentoRepository {
+export class DepartamentoRepository implements IDepartamentoRepository {
   constructor(
     @inject(TYPES.DepartamentoApi) private api: DepartamentoApi
   ) {}

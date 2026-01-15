@@ -13,7 +13,7 @@ export class PersonasViewModel {
   isLoading = false;
   error: string | null = null;
 
-  private personaUseCases: PersonaUseCases; // Solo PersonaUseCases
+  private personaUseCases: PersonaUseCases;
 
   private constructor() {
     makeAutoObservable(this);
@@ -64,7 +64,7 @@ export class PersonasViewModel {
 
     try {
       await this.personaUseCases.addPersona(persona);
-      await this.loadPersonas(); // Refresh the list after adding
+      await this.loadPersonas();
     } catch (err) {
       this.handleError(err, 'Error al agregar persona');
     }
@@ -76,7 +76,7 @@ export class PersonasViewModel {
 
     try {
       await this.personaUseCases.updatePersona(persona);
-      await this.loadPersonas(); // Refresh the list after updating
+      await this.loadPersonas();
     } catch (err) {
       this.handleError(err, 'Error al actualizar persona');
     }
@@ -88,7 +88,7 @@ export class PersonasViewModel {
 
     try {
       await this.personaUseCases.deletePersona(id);
-      await this.loadPersonas(); // Refresh the list after deleting
+      await this.loadPersonas();
     } catch (err) {
       this.handleError(err, 'Error al eliminar persona');
     }

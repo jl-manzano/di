@@ -1,5 +1,5 @@
 {
-  "name": "listadopersonascrud",
+  "name": "ejer2_signalr",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
-    "@react-native-picker/picker": "^2.11.4",
+    "@microsoft/signalr": "^10.0.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
@@ -28,9 +28,6 @@
     "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
     "expo-web-browser": "~15.0.10",
-    "inversify": "^7.11.0",
-    "mobx": "^6.15.0",
-    "mobx-react-lite": "^4.1.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -39,15 +36,10 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.5.1",
-    "reflect-metadata": "^0.2.2"
+    "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-decorators": "^7.28.6",
-    "@types/inversify": "^2.0.32",
     "@types/react": "~19.1.0",
-    "@types/reflect-metadata": "^0.0.5",
-    "babel-plugin-transform-typescript-metadata": "^0.4.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
