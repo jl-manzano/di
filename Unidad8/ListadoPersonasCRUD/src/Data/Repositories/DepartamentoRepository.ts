@@ -7,26 +7,26 @@ import { TYPES } from '../../Core/types';
 @injectable()
 export class DepartamentoRepository implements IDepartamentoRepository {
   constructor(
-    @inject(TYPES.DepartamentoApi) private api: DepartamentoApi
+    @inject(TYPES.DepartamentoApi) private departamentoApi: DepartamentoApi
   ) {}
 
-  async getAll(): Promise<Departamento[]> {
-    return await this.api.getAll();
+  getAll(): Promise<Departamento[]> {
+    return this.departamentoApi.getAll();
   }
 
-  async getById(id: number): Promise<Departamento | null> {
-    return await this.api.getById(id);
+  getById(id: number): Promise<Departamento | null> {
+    return this.departamentoApi.getById(id);
   }
 
-  async create(departamento: Departamento): Promise<Departamento> {
-    return await this.api.create(departamento);
+  create(departamento: Departamento): Promise<Departamento> {
+    return this.departamentoApi.create(departamento);
   }
 
-  async update(departamento: Departamento): Promise<Departamento> {
-    return await this.api.update(departamento);
+  update(departamento: Departamento): Promise<Departamento> {
+    return this.departamentoApi.update(departamento);
   }
 
-  async delete(id: number): Promise<void> {
-    await this.api.delete(id);
+  delete(id: number): Promise<void> {
+    return this.departamentoApi.delete(id);
   }
 }

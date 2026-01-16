@@ -23,7 +23,6 @@ export class PersonaApi {
     
     const data = await response.json();
     
-    // Mapear la respuesta de la API al DTO
     return data.map((item: any) => ({
       id: item.id,
       nombre: item.nombre,
@@ -94,48 +93,86 @@ export class PersonaApi {
   }
 
   async update(persona: Persona): Promise<Persona> {
+    console.log('PersonaApi.update - iniciado con:', persona);
     const url = this.baseApi.getBaseUrl(`/api/Personas/${persona.id}`);
+    console.log('PersonaApi.update - URL:', url);
+    
+    const body = JSON.stringify({
+      id: persona.id,
+      nombre: persona.nombre,
+      apellidos: persona.apellidos,
+      fechaNac: persona.fechaNac.toISOString(),
+      direccion: persona.direccion,
+      telefono: persona.telefono,
+      foto: persona.foto,
+      idDepartamento: persona.idDepartamento,
+    });
+    
+    console.log('PersonaApi.update - Body:', body);
+    
     const response = await fetch(url, {
       method: 'PUT',
       headers: this.baseApi.getDefaultHeaders(),
-      body: JSON.stringify({
-        id: persona.id,
-        nombre: persona.nombre,
-        apellidos: persona.apellidos,
-        fechaNac: persona.fechaNac.toISOString(),
-        direccion: persona.direccion,
-        telefono: persona.telefono,
-        foto: persona.foto,
-        idDepartamento: persona.idDepartamento,
-      }),
+      body: body,
     });
     
+    console.log('PersonaApi.update - Response status:', response.status);
+    console.log('PersonaApi.update - Response ok:', response.ok);
+    
     if (!response.ok) {
-      throw new Error('Error al actualizar persona');
+      const errorText = await response.text();
+      console.error('PersonaApi.update - Error response:', errorText);
+      throw new Error(`Error al actualizar persona: ${errorText || response.statusText}`);
     }
     
-    const data = await response.json();
-    return new Persona(
-      data.id,
-      data.nombre,
-      data.apellidos,
-      new Date(data.fechaNac),
-      data.direccion,
-      data.telefono,
-      data.foto,
-      data.idDepartamento
-    );
+    // Verificar si hay contenido en la respuesta
+    const text = await response.text();
+    console.log('PersonaApi.update - Response text:', text);
+    
+    // Si hay contenido JSON, parsearlo
+    if (text && text.length > 0) {
+      try {
+        const data = JSON.parse(text);
+        console.log('PersonaApi.update - Parsed data:', data);
+        return new Persona(
+          data.id,
+          data.nombre,
+          data.apellidos,
+          new Date(data.fechaNac),
+          data.direccion,
+          data.telefono,
+          data.foto,
+          data.idDepartamento
+        );
+      } catch (e) {
+        console.log('PersonaApi.update - Error parseando JSON, devolviendo persona original');
+        return persona;
+      }
+    }
+    
+    console.log('PersonaApi.update - Sin contenido, devolviendo persona original');
+    return persona;
   }
 
   async delete(id: number): Promise<void> {
+    console.log('PersonaApi.delete - iniciado con id:', id);
     const url = this.baseApi.getBaseUrl(`/api/Personas/${id}`);
+    console.log('PersonaApi.delete - URL:', url);
+    
     const response = await fetch(url, {
       method: 'DELETE',
       headers: this.baseApi.getDefaultHeaders(),
     });
     
+    console.log('PersonaApi.delete - Response status:', response.status);
+    console.log('PersonaApi.delete - Response ok:', response.ok);
+    
     if (!response.ok) {
-      throw new Error('Error al eliminar persona');
+      const errorText = await response.text();
+      console.error('PersonaApi.delete - Error response:', errorText);
+      throw new Error(`Error al eliminar persona: ${errorText || response.statusText}`);
     }
+    
+    console.log('PersonaApi.delete - Completado exitosamente');
   }
 }

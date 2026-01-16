@@ -1,7 +1,7 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { container } from '../../Core/container';
 import { TYPES } from '../../Core/types';
-import { DepartamentoUseCases } from '../../Domain/UseCases/DepartamentoUseCases'; // Importamos solo DepartamentoUseCases
+import { DepartamentoUseCases } from '../../Domain/UseCases/DepartamentoUseCases';
 import { Departamento } from '../../Domain/Entities/Departamento';
 import { DepartamentoUIModel, toDepartamentoUIModel } from '../Models/DepartamentoUIModel';
 
@@ -67,6 +67,7 @@ export class DepartamentosViewModel {
       await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al agregar departamento');
+      throw err; // Re-throw para que la UI pueda manejarlo
     }
   }
 
@@ -79,6 +80,7 @@ export class DepartamentosViewModel {
       await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al actualizar departamento');
+      throw err;
     }
   }
 
@@ -91,6 +93,7 @@ export class DepartamentosViewModel {
       await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al eliminar departamento');
+      throw err; // Re-throw para que la UI pueda manejarlo
     }
   }
 

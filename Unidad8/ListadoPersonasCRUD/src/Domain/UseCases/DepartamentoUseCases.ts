@@ -10,19 +10,19 @@ export class DepartamentoUseCases implements IDepartamentoUseCases {
     @inject(TYPES.DepartamentoRepository) private departamentoRepository: IDepartamentoRepository
   ) {}
 
-  async getDepartamentos(): Promise<Departamento[]> {
-    return await this.departamentoRepository.getAll();
+  getDepartamentos(): Promise<Departamento[]> {
+    return this.departamentoRepository.getAll();
   }
 
-  async addDepartamento(departamento: Departamento): Promise<Departamento> {
-    return await this.departamentoRepository.create(departamento);
+  addDepartamento(departamento: Departamento): Promise<Departamento> {
+    return this.departamentoRepository.create(departamento);
   }
 
-  async updateDepartamento(departamento: Departamento): Promise<Departamento> {
-    return await this.departamentoRepository.update(departamento);
+  updateDepartamento(departamento: Departamento): Promise<Departamento> {
+    return this.departamentoRepository.update(departamento);
   }
 
-  async deleteDepartamento(id: number): Promise<void> {
-    await this.departamentoRepository.delete(id);
+  deleteDepartamento(id: number): Promise<void> {
+    return this.departamentoRepository.delete(id);
   }
 }

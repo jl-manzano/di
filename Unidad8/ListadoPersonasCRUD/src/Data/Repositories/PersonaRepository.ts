@@ -1,33 +1,33 @@
 import { injectable, inject } from 'inversify';
 import { IPersonaRepository } from '../../Domain/Interfaces/Persona/IPersonaRepository';
-import { Persona } from '../../Domain/Entities/Persona';
 import { PersonaDTO } from '../../Domain/DTOs/PersonaDTO';
+import { Persona } from '../../Domain/Entities/Persona';
 import { PersonaApi } from '../API/PersonaAPI';
 import { TYPES } from '../../Core/types';
 
 @injectable()
 export class PersonaRepository implements IPersonaRepository {
   constructor(
-    @inject(TYPES.PersonaApi) private api: PersonaApi
+    @inject(TYPES.PersonaApi) private personaApi: PersonaApi
   ) {}
 
-  async getAll(): Promise<PersonaDTO[]> {
-    return await this.api.getAll();
+  getAll(): Promise<PersonaDTO[]> {
+    return this.personaApi.getAll();
   }
 
-  async getById(id: number): Promise<PersonaDTO | null> {
-    return await this.api.getById(id);
+  getById(id: number): Promise<PersonaDTO | null> {
+    return this.personaApi.getById(id);
   }
 
-  async create(persona: Persona): Promise<Persona> {
-    return await this.api.create(persona);
+  create(persona: Persona): Promise<Persona> {
+    return this.personaApi.create(persona);
   }
 
-  async update(persona: Persona): Promise<Persona> {
-    return await this.api.update(persona);
+  update(persona: Persona): Promise<Persona> {
+    return this.personaApi.update(persona);
   }
 
-  async delete(id: number): Promise<void> {
-    await this.api.delete(id);
+  delete(id: number): Promise<void> {
+    return this.personaApi.delete(id);
   }
 }

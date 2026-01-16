@@ -67,6 +67,7 @@ export class PersonasViewModel {
       await this.loadPersonas();
     } catch (err) {
       this.handleError(err, 'Error al agregar persona');
+      throw err; // Re-throw para que la UI pueda manejarlo
     }
   }
 
@@ -79,6 +80,7 @@ export class PersonasViewModel {
       await this.loadPersonas();
     } catch (err) {
       this.handleError(err, 'Error al actualizar persona');
+      throw err;
     }
   }
 
@@ -91,6 +93,7 @@ export class PersonasViewModel {
       await this.loadPersonas();
     } catch (err) {
       this.handleError(err, 'Error al eliminar persona');
+      throw err; // Re-throw para que la UI pueda manejarlo
     }
   }
 

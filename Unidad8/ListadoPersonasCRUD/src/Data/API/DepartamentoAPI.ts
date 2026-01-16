@@ -21,7 +21,7 @@ export class DepartamentoApi {
     }
     
     const data = await response.json();
-    return data.map((item: any) => new Departamento(item.idDepartamento, item.nombreDepartamento));  // Crear instancia de Departamento
+    return data.map((item: any) => new Departamento(item.idDepartamento, item.nombreDepartamento));
   }
 
   async getById(id: number): Promise<Departamento | null> {
@@ -34,7 +34,7 @@ export class DepartamentoApi {
     if (!response.ok) return null;
     
     const data = await response.json();
-    return new Departamento(data.idDepartamento, data.nombreDepartamento);  // Crear instancia de Departamento
+    return new Departamento(data.idDepartamento, data.nombreDepartamento);
   }
 
   async create(departamento: Departamento): Promise<Departamento> {
@@ -52,7 +52,7 @@ export class DepartamentoApi {
     }
     
     const data = await response.json();
-    return new Departamento(data.idDepartamento, data.nombreDepartamento);  // Crear instancia de Departamento
+    return new Departamento(data.idDepartamento, data.nombreDepartamento);
   }
 
   async update(departamento: Departamento): Promise<Departamento> {
@@ -70,8 +70,15 @@ export class DepartamentoApi {
       throw new Error('Error al actualizar departamento');
     }
     
-    const data = await response.json();
-    return new Departamento(data.idDepartamento, data.nombreDepartamento);  // Crear instancia de Departamento
+    // Verificar si hay contenido JSON en la respuesta
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      return new Departamento(data.idDepartamento, data.nombreDepartamento);
+    }
+    
+    // Si no hay JSON, devolvemos el departamento que enviamos
+    return departamento;
   }
 
   async delete(id: number): Promise<void> {
@@ -82,7 +89,10 @@ export class DepartamentoApi {
     });
     
     if (!response.ok) {
-      throw new Error('Error al eliminar departamento');
+      const errorText = await response.text();
+      throw new Error(`Error al eliminar departamento: ${errorText || response.statusText}`);
     }
+    
+    // DELETE usualmente no devuelve contenido (204 No Content)
   }
 }
