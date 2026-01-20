@@ -1,5 +1,5 @@
 /**
- * CORE - Tipos y constantes compartidos
+ * CORE - Tipos y Símbolos para Inyección de Dependencias
  */
 
 import { clsMensajeUsuario } from '../domain/entities/clsMensajeUsuario';
@@ -22,9 +22,12 @@ export enum ConnectionState {
   Reconnecting = 'Reconnecting'
 }
 
-// Símbolos para inyección de dependencias
+/**
+ * Identificadores únicos para inyección de dependencias con InversifyJS
+ */
 export const TYPES = {
   IMessageUseCases: Symbol.for('IMessageUseCases'),
   ChatViewModel: Symbol.for('ChatViewModel'),
-  AppConfig: Symbol.for('AppConfig')
+  AppConfig: Symbol.for('AppConfig'),
+  HubUrl: Symbol.for('HubUrl')
 };

@@ -1,8 +1,23 @@
+/**
+ * UI LAYER - ViewModel para el Chat
+ * 
+ * Gestiona el estado y la lógica de presentación del chat
+ * Patrón MVVM con MobX para reactividad
+ */
+
+import { injectable, inject } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 import { clsMensajeUsuario } from '../../domain/entities/clsMensajeUsuario';
 import { IMessageUseCases } from '../../domain/interfaces/IMessageUseCases';
+import { TYPES } from '../../core/types';
 
+/**
+ * ViewModel del Chat
+ * @injectable - Marca la clase como inyectable por InversifyJS
+ */
+@injectable()
 export class ChatViewModel {
+  // Estado observable con MobX
   messages: clsMensajeUsuario[] = [];
   userInput: string = '';
   messageInput: string = '';
@@ -11,12 +26,21 @@ export class ChatViewModel {
 
   private messageUseCases: IMessageUseCases;
 
-  constructor(messageUseCases: IMessageUseCases) {
+  /**
+   * Constructor con inyección de dependencias
+   * @inject - Inyecta IMessageUseCases desde el contenedor
+   */
+  constructor(
+    @inject(TYPES.IMessageUseCases) messageUseCases: IMessageUseCases
+  ) {
     this.messageUseCases = messageUseCases;
     makeAutoObservable(this);
-    console.log('🎯 ChatViewModel inicializado');
+    console.log('🎯 ChatViewModel inicializado con InversifyJS');
   }
 
+  /**
+   * Inicializa la conexión y configura listeners
+   */
   async initialize(): Promise<void> {
     console.log('🚀 Iniciando conexión desde ViewModel...');
     try {
@@ -28,6 +52,7 @@ export class ChatViewModel {
         console.log('✅ ViewModel: Conexión establecida');
       });
 
+      // Configurar listener para mensajes entrantes
       this.messageUseCases.onMessageReceived((mensaje: clsMensajeUsuario) => {
         console.log('📩 ViewModel recibió mensaje:', mensaje);
         this.addMessage(mensaje);
@@ -41,14 +66,23 @@ export class ChatViewModel {
     }
   }
 
+  /**
+   * Actualiza el input de usuario
+   */
   setUserInput(value: string): void {
     this.userInput = value;
   }
 
+  /**
+   * Actualiza el input de mensaje
+   */
   setMessageInput(value: string): void {
     this.messageInput = value;
   }
 
+  /**
+   * Envía un mensaje al servidor
+   */
   async sendMessage(): Promise<void> {
     if (!this.isConnected) {
       runInAction(() => {
@@ -88,6 +122,9 @@ export class ChatViewModel {
     }
   }
 
+  /**
+   * Agrega un mensaje a la lista (privado)
+   */
   private addMessage(mensaje: clsMensajeUsuario): void {
     runInAction(() => {
       this.messages.push(mensaje);
@@ -95,6 +132,9 @@ export class ChatViewModel {
     });
   }
 
+  /**
+   * Limpia todos los mensajes
+   */
   clearMessages(): void {
     runInAction(() => {
       this.messages = [];
@@ -102,6 +142,9 @@ export class ChatViewModel {
     });
   }
 
+  /**
+   * Desconecta del servidor
+   */
   async disconnect(): Promise<void> {
     console.log('🔌 Desconectando desde ViewModel...');
     await this.messageUseCases.disconnect();
@@ -110,6 +153,9 @@ export class ChatViewModel {
     });
   }
 
+  /**
+   * Getter computed para el conteo de mensajes
+   */
   get messageCount(): number {
     return this.messages.length;
   }

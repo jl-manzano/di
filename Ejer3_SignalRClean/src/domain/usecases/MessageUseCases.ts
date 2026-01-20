@@ -1,16 +1,39 @@
+/**
+ * DOMAIN LAYER - Casos de Uso de Mensajería
+ * 
+ * Implementa la lógica de negocio para gestionar mensajes
+ * Usa SignalR para comunicación en tiempo real
+ */
+
+import { injectable, inject } from 'inversify';
 import * as signalR from '@microsoft/signalr';
 import { clsMensajeUsuario } from '../entities/clsMensajeUsuario';
 import { IMessageUseCases } from '../interfaces/IMessageUseCases';
+import { TYPES } from '../../core/types';
 
+/**
+ * Implementación de casos de uso para mensajes
+ * @injectable - Marca la clase como inyectable por InversifyJS
+ */
+@injectable()
 export class MessageUseCases implements IMessageUseCases {
   private connection: signalR.HubConnection | null = null;
   private readonly hubUrl: string;
 
-  constructor(hubUrl: string) {
+  /**
+   * Constructor con inyección de dependencias
+   * @inject - Inyecta la URL del Hub de SignalR
+   */
+  constructor(
+    @inject(TYPES.HubUrl) hubUrl: string
+  ) {
     this.hubUrl = hubUrl;
     console.log('🔧 MessageUseCases creado con URL:', hubUrl);
   }
 
+  /**
+   * Inicializa la conexión con SignalR
+   */
   async initializeConnection(): Promise<void> {
     try {
       console.log('🔌 Intentando conectar a:', this.hubUrl);
@@ -52,6 +75,9 @@ export class MessageUseCases implements IMessageUseCases {
     }
   }
 
+  /**
+   * Envía un mensaje al servidor
+   */
   async sendMessage(mensaje: clsMensajeUsuario): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       throw new Error('No hay conexión con el servidor');
@@ -78,6 +104,9 @@ export class MessageUseCases implements IMessageUseCases {
     }
   }
 
+  /**
+   * Registra un callback para recibir mensajes
+   */
   onMessageReceived(callback: (mensaje: clsMensajeUsuario) => void): void {
     if (!this.connection) {
       throw new Error('La conexión no ha sido inicializada');
@@ -101,6 +130,9 @@ export class MessageUseCases implements IMessageUseCases {
     console.log('👂 Listener ReceiveMessage registrado');
   }
 
+  /**
+   * Cierra la conexión con el servidor
+   */
   async disconnect(): Promise<void> {
     if (this.connection) {
       await this.connection.stop();
@@ -108,6 +140,9 @@ export class MessageUseCases implements IMessageUseCases {
     }
   }
 
+  /**
+   * Verifica si hay conexión activa
+   */
   isConnected(): boolean {
     return this.connection?.state === signalR.HubConnectionState.Connected;
   }
