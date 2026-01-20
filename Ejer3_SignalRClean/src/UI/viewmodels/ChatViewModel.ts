@@ -14,28 +14,30 @@ export class ChatViewModel {
   constructor(messageUseCases: IMessageUseCases) {
     this.messageUseCases = messageUseCases;
     makeAutoObservable(this);
+    console.log('🎯 ChatViewModel inicializado');
   }
 
   async initialize(): Promise<void> {
+    console.log('🚀 Iniciando conexión desde ViewModel...');
     try {
       await this.messageUseCases.initializeConnection();
       
-      // ✅ Usar runInAction para modificar observables
       runInAction(() => {
         this.isConnected = true;
         this.errorMessage = '';
+        console.log('✅ ViewModel: Conexión establecida');
       });
 
       this.messageUseCases.onMessageReceived((mensaje: clsMensajeUsuario) => {
+        console.log('📩 ViewModel recibió mensaje:', mensaje);
         this.addMessage(mensaje);
       });
-    } catch (error) {
-      // ✅ Usar runInAction
+    } catch (error: any) {
+      console.error('❌ ViewModel: Error al conectar:', error);
       runInAction(() => {
         this.isConnected = false;
-        this.errorMessage = 'Error al conectar con el servidor';
+        this.errorMessage = error.message || 'Error al conectar con el servidor';
       });
-      console.error(error);
     }
   }
 
@@ -52,10 +54,12 @@ export class ChatViewModel {
       runInAction(() => {
         this.errorMessage = 'No hay conexión con el servidor';
       });
+      console.warn('⚠️ Intento de envío sin conexión');
       return;
     }
 
     if (this.messageInput.trim() === '') {
+      console.warn('⚠️ Mensaje vacío, no se enviará');
       return;
     }
 
@@ -63,34 +67,43 @@ export class ChatViewModel {
       const usuario = this.userInput.trim() || 'Anónimo';
       const mensaje = new clsMensajeUsuario(usuario, this.messageInput);
 
+      console.log('📤 ViewModel: Enviando mensaje:', {
+        usuario: mensaje.usuario,
+        mensaje: mensaje.mensaje
+      });
+
       await this.messageUseCases.sendMessage(mensaje);
 
-      // ✅ Usar runInAction para limpiar
       runInAction(() => {
         this.messageInput = '';
         this.errorMessage = '';
       });
+      
+      console.log('✅ ViewModel: Mensaje enviado y campo limpiado');
     } catch (error: any) {
-      // ✅ Usar runInAction para errores
+      console.error('❌ ViewModel: Error al enviar:', error);
       runInAction(() => {
         this.errorMessage = error.message || 'Error al enviar el mensaje';
       });
-      console.error(error);
     }
   }
 
   private addMessage(mensaje: clsMensajeUsuario): void {
-    // ✅ Usar runInAction
     runInAction(() => {
       this.messages.push(mensaje);
+      console.log(`📝 Mensaje agregado. Total: ${this.messages.length}`);
     });
   }
 
   clearMessages(): void {
-    this.messages = [];
+    runInAction(() => {
+      this.messages = [];
+      console.log('🧹 Mensajes limpiados');
+    });
   }
 
   async disconnect(): Promise<void> {
+    console.log('🔌 Desconectando desde ViewModel...');
     await this.messageUseCases.disconnect();
     runInAction(() => {
       this.isConnected = false;

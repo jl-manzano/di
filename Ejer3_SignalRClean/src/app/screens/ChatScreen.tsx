@@ -48,8 +48,12 @@ const ChatScreen: React.FC<ChatScreenProps> = observer(({ viewModel }) => {
 
   const renderItem = ({ item }: { item: clsMensajeUsuario }) => (
     <View style={styles.messageBubble}>
-      <Text style={styles.userLabel}>{item.usuario}</Text> {/* ← CAMBIO: usuario en lugar de nombre */}
-      <Text style={styles.messageText}>{item.mensaje}</Text>
+      <Text style={styles.userLabel}>
+        {item.usuario || 'Anónimo'}
+      </Text>
+      <Text style={styles.messageText}>
+        {item.mensaje || ''}
+      </Text>
     </View>
   );
 

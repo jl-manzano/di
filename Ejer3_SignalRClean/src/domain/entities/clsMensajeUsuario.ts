@@ -6,14 +6,19 @@ export class clsMensajeUsuario {
   mensaje: string;
 
   constructor(usuario: string, mensaje: string) {
-    this.usuario = usuario;
-    this.mensaje = mensaje;
+    this.usuario = usuario || 'Anónimo';
+    this.mensaje = mensaje || '';
   }
 
   static fromJSON(json: any): clsMensajeUsuario {
+    if (!json) {
+      console.warn('⚠️ JSON null/undefined recibido en fromJSON');
+      return new clsMensajeUsuario('Anónimo', '');
+    }
+
     return new clsMensajeUsuario(
-      json.usuario || '',
-      json.mensaje || ''
+      json.usuario || json.Usuario || 'Anónimo',
+      json.mensaje || json.Mensaje || ''
     );
   }
 

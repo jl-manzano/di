@@ -83,19 +83,13 @@ export function setupDependencies(config: AppConfig): void {
   // 1. Registrar configuración como singleton
   container.registerSingleton(TYPES.AppConfig, config);
 
-  // 2. Registrar MessageUseCases como factory
-  // Se crea una nueva instancia cada vez que se resuelve (si fuera necesario)
-  container.registerFactory(
-    TYPES.IMessageUseCases,
-    () => {
-      console.log('🏭 Creando instancia de MessageUseCases');
-      return new MessageUseCases(config.hubUrl);
-    }
-  );
+  // 2. Registrar MessageUseCases como singleton
+  // Usamos singleton para mantener la misma conexión SignalR
+  const messageUseCases = new MessageUseCases(config.hubUrl);
+  container.registerSingleton(TYPES.IMessageUseCases, messageUseCases);
 
   // 3. Registrar ChatViewModel como singleton
   // Una sola instancia compartida en toda la app
-  const messageUseCases = container.resolve<IMessageUseCases>(TYPES.IMessageUseCases);
   const chatViewModel = new ChatViewModel(messageUseCases);
   container.registerSingleton(TYPES.ChatViewModel, chatViewModel);
 
