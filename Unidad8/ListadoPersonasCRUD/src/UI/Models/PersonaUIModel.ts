@@ -6,14 +6,18 @@ export interface PersonaUIModel extends PersonaDTO {
 }
 
 export const toPersonaUIModel = (dto: PersonaDTO): PersonaUIModel => {
-  const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  // Usar la misma paleta de colores que los departamentos para mantener consistencia visual
+  const colors = ['#6C5CE7', '#00B894', '#FDCB6E', '#E17055', '#74B9FF', '#A29BFE', '#FF7675', '#FD79A8', '#55EFC4', '#81ECEC'];
+  
+  // Asignar color basado en el idDepartamento para que coincida con el color del departamento
+  const colorIndex = dto.idDepartamento % colors.length;
+  const assignedColor = colors[colorIndex];
   
   const initials = `${dto.nombre.charAt(0)}${dto.apellidos.charAt(0)}`.toUpperCase();
   
   return {
     ...dto,
-    color: randomColor,
+    color: assignedColor,
     initials,
   };
 };

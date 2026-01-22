@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { PersonaUIModel } from '../UI/Models/PersonaUIModel';
 
 interface PersonaListItemProps {
@@ -9,6 +9,11 @@ interface PersonaListItemProps {
 }
 
 export function PersonaListItem({ persona, onPress, onDelete }: PersonaListItemProps) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Verificar si hay foto y si no ha fallado la carga
+  const shouldShowImage = persona.foto && persona.foto.trim() !== '' && !imageError;
+
   return (
     <View style={styles.container}>
       <TouchableOpacity 
@@ -17,8 +22,25 @@ export function PersonaListItem({ persona, onPress, onDelete }: PersonaListItemP
         activeOpacity={0.7}
       >
         <View style={[styles.avatar, { backgroundColor: persona.color }]}>
-          <Text style={styles.initials}>{persona.initials}</Text>
-          <View style={styles.avatarOverlay} />
+          {shouldShowImage ? (
+            <>
+              <Image 
+                source={{ uri: persona.foto }} 
+                style={styles.avatarImage}
+                resizeMode="cover"
+                onError={() => {
+                  console.log('Error al cargar imagen:', persona.foto);
+                  setImageError(true);
+                }}
+              />
+              <View style={styles.avatarOverlay} />
+            </>
+          ) : (
+            <>
+              <Text style={styles.initials}>{persona.initials}</Text>
+              <View style={styles.avatarOverlay} />
+            </>
+          )}
         </View>
         
         <View style={styles.content}>
@@ -79,6 +101,13 @@ const styles = StyleSheet.create({
     marginRight: 16,
     position: 'relative',
     overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   avatarOverlay: {
     position: 'absolute',

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'expo-router';
@@ -27,7 +28,9 @@ const EditarInsertarPersonaScreen = observer(function EditarInsertarPersonaScree
   const [telefono, setTelefono] = useState('');
   const [direccion, setDireccion] = useState('');
   const [idDepartamento, setIdDepartamento] = useState(0);
+  const [foto, setFoto] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     console.log('EditarInsertarPersonaScreen - isEditing:', isEditing);
@@ -39,6 +42,7 @@ const EditarInsertarPersonaScreen = observer(function EditarInsertarPersonaScree
       setTelefono(personaSeleccionada.telefono);
       setDireccion(personaSeleccionada.direccion);
       setIdDepartamento(personaSeleccionada.idDepartamento);
+      setFoto(personaSeleccionada.foto || '');
     }
   }, [isEditing, personaSeleccionada]);
 
@@ -65,7 +69,7 @@ const EditarInsertarPersonaScreen = observer(function EditarInsertarPersonaScree
       isEditing ? personaSeleccionada!.fechaNac : new Date(),
       direccion,
       telefono,
-      '',
+      foto,
       idDepartamento
     );
 
@@ -92,18 +96,69 @@ const EditarInsertarPersonaScreen = observer(function EditarInsertarPersonaScree
     }
   };
 
+  const initials = nombre && apellidos ? `${nombre.charAt(0)}${apellidos.charAt(0)}`.toUpperCase() : '??';
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {isEditing ? 'Editar Persona' : 'Nueva Persona'}
-        </Text>
-        <Text style={styles.headerSubtitle}>
-          {isEditing ? 'Modifica los datos de la persona' : 'Completa la información'}
-        </Text>
+        <View style={styles.headerContent}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backArrow}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>
+              {isEditing ? 'Editar Persona' : 'Nueva Persona'}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {isEditing ? 'Modifica los datos de la persona' : 'Completa la información'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.form}>
+        {/* Vista previa de la foto */}
+        {foto && (
+          <View style={styles.photoPreview}>
+            {!imageError ? (
+              <Image 
+                source={{ uri: foto }} 
+                style={styles.previewImage}
+                resizeMode="cover"
+                onError={() => {
+                  console.log('Error al cargar imagen preview:', foto);
+                  setImageError(true);
+                }}
+              />
+            ) : (
+              <View style={[styles.previewImagePlaceholder, { backgroundColor: '#667eea' }]}>
+                <Text style={styles.previewInitials}>{initials}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>URL de la foto de perfil</Text>
+          <TextInput
+            style={styles.input}
+            value={foto}
+            onChangeText={(text) => {
+              setFoto(text);
+              setImageError(false); // Resetear error cuando cambia la URL
+            }}
+            placeholder="https://ejemplo.com/foto.jpg"
+            placeholderTextColor="#adb5bd"
+            editable={!isSaving}
+            autoCapitalize="none"
+          />
+          <Text style={styles.hint}>Pega la URL de una imagen (opcional)</Text>
+        </View>
+
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Nombre <Text style={styles.required}>*</Text></Text>
           <TextInput
@@ -234,6 +289,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
+  backArrow: {
+    fontSize: 28,
+    color: '#667eea',
+    fontWeight: 'bold',
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -246,6 +317,31 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 20,
+  },
+  photoPreview: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  previewImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: '#667eea',
+  },
+  previewImagePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewInitials: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   inputGroup: {
     marginBottom: 20,
@@ -267,6 +363,11 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     fontSize: 16,
     color: '#1a1a2e',
+  },
+  hint: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 6,
   },
   picker: {
     gap: 8,

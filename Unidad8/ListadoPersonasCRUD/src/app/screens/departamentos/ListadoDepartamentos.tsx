@@ -93,8 +93,18 @@ const ListadoDepartamentos = observer(function ListadoDepartamentos() {
 
   return (
     <View style={styles.container}>
+      {/* Header con flecha SIEMPRE visible */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Departamentos</Text>
+        <View style={styles.headerContent}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.push('/')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.backArrow}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Departamentos</Text>
+        </View>
         <Text style={styles.headerSubtitle}>
           {viewModel.departamentos.length} departamento{viewModel.departamentos.length !== 1 ? 's' : ''}
         </Text>
@@ -125,21 +135,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: '#fff',
-    padding: 20,
-    paddingTop: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#667eea',
+    paddingTop: 20,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
+  backArrow: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a2e',
-    marginBottom: 4,
+    color: '#fff',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#6c757d',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginLeft: 44,
   },
   centerContainer: {
     flex: 1,

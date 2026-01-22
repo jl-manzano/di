@@ -10,6 +10,38 @@ export class PersonaApi {
     @inject(TYPES.BaseApi) private baseApi: BaseApi
   ) {}
 
+  async uploadImage(imageUri: string): Promise<string> {
+    try {
+      const formData = new FormData();
+      
+      // En web, necesitamos convertir la URI a un blob
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      
+      // Agregar la imagen al FormData
+      formData.append('file', blob, 'profile.jpg');
+
+      // Subir al servidor
+      const url = this.baseApi.getBaseUrl('/api/Personas/upload-image');
+      const uploadResponse = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        // No incluir Content-Type header, el navegador lo establecerá automáticamente con el boundary correcto
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Error al subir la imagen');
+      }
+
+      const data = await uploadResponse.json();
+      // El servidor debe devolver { url: "https://..." }
+      return data.url || data.imageUrl || data.path;
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      throw error;
+    }
+  }
+
   async getAll(): Promise<PersonaDTO[]> {
     const url = this.baseApi.getBaseUrl('/api/Personas');
     const response = await fetch(url, {

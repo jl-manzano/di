@@ -32,16 +32,25 @@ export default function RootLayout() {
         }} 
       />
       <Stack.Screen 
-        name="screens/ListadoPersonasScreen" 
-        options={{ title: 'Personal' }} 
+        name="screens/personas/ListadoPersonasScreen" 
+        options={{ 
+          title: 'Personal',
+          headerShown: false  // Ocultar porque el componente tiene su propio header
+        }} 
       />
       <Stack.Screen 
         name="screens/personas/EditarInsertarPersonaScreen" 
-        options={{ title: 'Gestionar Persona' }} 
+        options={{ 
+          title: 'Gestionar Persona',
+          headerShown: false  // Ocultar porque el componente tiene su propio header
+        }} 
       />
       <Stack.Screen 
         name="screens/departamentos/ListadoDepartamentos" 
-        options={{ title: 'Departamentos' }} 
+        options={{ 
+          title: 'Departamentos',
+          headerShown: false  // Ocultar porque el componente tiene su propio header
+        }} 
       />
     </Stack>
   );

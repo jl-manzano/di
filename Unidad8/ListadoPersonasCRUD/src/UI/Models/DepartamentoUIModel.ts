@@ -8,14 +8,17 @@ export interface DepartamentoUIModel {
 }
 
 export const toDepartamentoUIModel = (departamento: Departamento): DepartamentoUIModel => {
-  // Aquí asignamos un color y un icono predeterminado
-  const colors = ['#6C5CE7', '#00B894', '#FDCB6E', '#E17055', '#74B9FF'];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  // Paleta de colores para los departamentos
+  const colors = ['#6C5CE7', '#00B894', '#FDCB6E', '#E17055', '#74B9FF', '#A29BFE', '#FF7675', '#FD79A8', '#55EFC4', '#81ECEC'];
+  
+  // Asignar color basado en el ID del departamento para que sea consistente
+  const colorIndex = departamento.idDepartamento % colors.length;
+  const assignedColor = colors[colorIndex];
   
   return {
     idDepartamento: departamento.idDepartamento,
     nombreDepartamento: departamento.nombreDepartamento,
-    color: randomColor, // Asigna un color aleatorio
+    color: assignedColor, // Asigna un color único basado en el ID
     icon: '🏢', // Asigna un icono por defecto, puedes cambiarlo según el departamento
   };
 };
