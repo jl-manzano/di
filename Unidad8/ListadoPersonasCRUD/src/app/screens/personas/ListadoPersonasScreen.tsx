@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'expo-router';
-import { PersonasViewModel } from '../../UI/ViewModels/PersonasViewModel';
-import { PersonaListItem } from '../../Components/PeopleListItem';
-import { PersonaUIModel } from '../../UI/Models/PersonaUIModel';
+import { PersonasViewModel } from '../../../UI/ViewModels/PersonasViewModel';
+import { PersonaListItem } from '../../../Components/PeopleListItem';
+import { PersonaUIModel } from '../../../UI/Models/PersonaUIModel';
 
 const ListadoPersonasScreen = observer(function ListadoPersonasScreen() {
   const viewModel = PersonasViewModel.getInstance();
