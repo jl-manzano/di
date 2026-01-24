@@ -283,11 +283,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: '#667eea',
     padding: 20,
     paddingTop: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   headerContent: {
     flexDirection: 'row',
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 28,
-    color: '#667eea',
+    color: '#fff',
     fontWeight: 'bold',
   },
   headerTextContainer: {
@@ -308,12 +311,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a2e',
+    color: '#fff',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#6c757d',
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   form: {
     padding: 20,

@@ -1,64 +1,71 @@
 src/
-    app/
+    App/
         index.tsx
             + default function Index()
                 -> Estado: loading, error
                 -> useEffect: initializeApp()
-                -> Función: initializeApp() -> Carga departamentos, luego personas, navega a WelcomeScreen
+                -> Función: initializeApp() -> loadDepartamentos, loadPersonas, router.replace('/screens/WelcomeScreen')
                 -> Renderiza:
-                    * Si error: Container con errorContainer (icono, título, detalle)
-                    * Si loading: Container con loadingContainer (logo HR, spinner, textos)
+                    * Si error: errorContainer (icono, título, detalle)
+                    * Si loading: loadingContainer (logo HR, spinner, textos)
                     * null si success
         
         _layout.tsx
             + default function RootLayout()
-                -> Configura Stack.Navigator con:
+                -> Configura Stack con:
                     * index, WelcomeScreen, ListadoPersonasScreen
                     * EditarInsertarPersonaScreen, ListadoDepartamentos
+                    * Todas con headerShown: false
         
         screens/
             WelcomeScreen.tsx
                 + default function WelcomeScreen()
                     -> useRouter()
-                    -> Renderiza: Header (logo, título), 2 cards (Personas, Departamentos), Footer
+                    -> Renderiza: Header (logo 🗃️, título "RRHH"), 2 cards navegables, info cards, footer
             
-            ListadoPersonasScreen.tsx (observer)
-                + function ListadoPersonasScreen()
-                    -> viewModel: PersonasViewModel.getInstance()
-                    -> useEffect: loadPersonas()
-                    -> Funciones: handleAddPersona, handleEditPersona, handleDeletePersona, performDelete
-                    -> Renderiza:
-                        * Si loading: ActivityIndicator
-                        * Si error: errorContainer
-                        * FlatList de PersonaListItem, FAB flotante
+            personas/
+                ListadoPersonasScreen.tsx (observer)
+                    + function ListadoPersonasScreen()
+                        -> viewModel: PersonasViewModel.getInstance()
+                        -> useEffect: loadPersonas()
+                        -> Funciones: handleAddPersona, handleEditPersona, handleDeletePersona, performDelete
+                        -> Renderiza:
+                            * Si loading: ActivityIndicator
+                            * Si error: errorContainer
+                            * Header azul con ← y contador
+                            * FlatList de PersonaListItem
+                            * FAB (+) flotante
+                
+                EditarInsertarPersonaScreen.tsx (observer)
+                    + function EditarInsertarPersonaScreen()
+                        -> personasVM, departamentosVM (getInstance)
+                        -> Estado: nombre, apellidos, telefono, direccion, foto (URL), idDepartamento, isSaving, imageError
+                        -> useEffect: Carga datos si isEditing
+                        -> handleGuardar() -> Valida, crea Persona, add/updatePersona, router.back()
+                        -> Renderiza: Header azul con ←, preview foto/iniciales, campos, selector deps, botones
             
-            personas/EditarInsertarPersonaScreen.tsx (observer)
-                + function EditarInsertarPersonaScreen()
-                    -> personasVM, departamentosVM (getInstance)
-                    -> Estado: nombre, apellidos, telefono, direccion, idDepartamento, isSaving
-                    -> useEffect: Carga datos si isEditing
-                    -> handleGuardar() -> Valida, crea Persona, updatePersona o addPersona, router.back()
-                    -> Renderiza: ScrollView con header, form (inputs, picker departamentos), buttonGroup
-            
-            departamentos/ListadoDepartamentos.tsx (observer)
-                + function ListadoDepartamentos()
-                    -> viewModel: DepartamentosViewModel.getInstance()
-                    -> useEffect: loadDepartamentos()
-                    -> Funciones: handleDeleteDepartamento, performDelete
-                    -> renderDepartamento: Card con icon, info, deleteButton
-                    -> Renderiza:
-                        * Si loading: ActivityIndicator
-                        * Si error: errorContainer
-                        * FlatList de departamentos
+            departamentos/
+                ListadoDepartamentos.tsx (observer)
+                    + function ListadoDepartamentos()
+                        -> viewModel: DepartamentosViewModel.getInstance()
+                        -> useEffect: loadDepartamentos()
+                        -> Funciones: handleDeleteDepartamento, performDelete
+                        -> renderDepartamento: Card inline (icon, nombre, eliminar)
+                        -> Renderiza:
+                            * Si loading: ActivityIndicator
+                            * Si error: errorContainer
+                            * Header azul con ← y contador
+                            * FlatList de cards departamento
     
     Components/
         PersonaListItem.tsx
             - Props: persona, onPress, onDelete
-            -> Renderiza: mainContent (avatar, nombre, teléfono, departamento), deleteButton
+            - Estado: imageError
+            -> Renderiza: Avatar (foto o iniciales con color dept), nombre, teléfono, badge dept, eliminar
         
         DepartamentoListItem.tsx
             - Props: departamento, onPress, onDelete
-            -> Renderiza: mainContent (icon, nombre, idBadge), deleteButton
+            -> Renderiza: Icon con color, nombre, eliminar
     
     Core/
         types.ts
@@ -83,11 +90,12 @@ src/
             @injectable()
             + class BaseApi
                 - readonly BASE_URL: string = "https://ui20251201142043-dnhvdfbxdbh9bnbt.spaincentral-01.azurewebsites.net"
-                + getBaseUrl(endpoint: string): string -> new URL(endpoint, BASE_URL).toString()
+                + getBaseUrl(endpoint): string -> new URL(endpoint, BASE_URL).toString()
                 + getDefaultHeaders(): HeadersInit -> { "Content-Type": "application/json" }
     
     Domain/
         Entities/
+            Persona.ts
             Persona.ts
                 + class Persona
                     - _id: number { get; set; }
@@ -147,7 +155,7 @@ src/
                 + class DepartamentoUseCases implements IDepartamentoUseCases
                     - departamentoRepository: IDepartamentoRepository
                     + DepartamentoUseCases(@inject(TYPES.DepartamentoRepository) departamentoRepository)
-                    + getDepartamentos(), addDepartamento(), updateDepartamento(), deleteDepartamento()
+                    + getDepartamentos(), addDepartamento(), updateDepartamento(), deleteDepartamento() -> Delega a repository
     
     Data/
         API/
@@ -156,11 +164,12 @@ src/
                 + class PersonaApi
                     - baseApi: BaseApi
                     + PersonaApi(@inject(TYPES.BaseApi) baseApi)
-                    + async getAll() -> GET /api/Personas
-                    + async getById() -> GET /api/Personas/{id}
-                    + async create() -> POST /api/Personas
-                    + async update() -> PUT /api/Personas/{id}, verifica content-type, maneja respuesta vacía
-                    + async delete() -> DELETE /api/Personas/{id}
+                    + async uploadImage(imageUri) -> Convierte a blob, POST /api/Personas/upload-image
+                    + async getAll() -> GET /api/Personas, mapea a PersonaDTO[]
+                    + async getById(id) -> GET /api/Personas/{id}
+                    + async create(persona) -> POST /api/Personas
+                    + async update(persona) -> PUT /api/Personas/{id}, verifica content-type, maneja respuesta vacía
+                    + async delete(id) -> DELETE /api/Personas/{id}
             
             DepartamentoApi.ts
                 @injectable()
@@ -168,10 +177,10 @@ src/
                     - baseApi: BaseApi
                     + DepartamentoApi(@inject(TYPES.BaseApi) baseApi)
                     + async getAll() -> GET /api/Departamentos
-                    + async getById() -> GET /api/Departamentos/{id}
-                    + async create() -> POST /api/Departamentos
-                    + async update() -> PUT /api/Departamentos/{id}, verifica content-type
-                    + async delete() -> DELETE /api/Departamentos/{id}
+                    + async getById(id) -> GET /api/Departamentos/{id}
+                    + async create(departamento) -> POST /api/Departamentos
+                    + async update(departamento) -> PUT /api/Departamentos/{id}, verifica content-type
+                    + async delete(id) -> DELETE /api/Departamentos/{id}
         
         Repositories/
             PersonaRepository.ts
@@ -193,15 +202,15 @@ src/
             PersonaUIModel.ts
                 + interface PersonaUIModel extends PersonaDTO
                     + color?: string, initials?: string
-                + toPersonaUIModel(dto) -> Genera color aleatorio, iniciales
+                + toPersonaUIModel(dto) -> Asigna color según idDepartamento % 10 (paleta 10 colores), genera iniciales
             
             DepartamentoUIModel.ts
                 + interface DepartamentoUIModel
                     + idDepartamento, nombreDepartamento, color, icon
-                + toDepartamentoUIModel(departamento) -> Genera color aleatorio, asigna icono 🏢
+                + toDepartamentoUIModel(departamento) -> Asigna color según id % 10 (paleta compartida), icon 🏢
         
         ViewModels/
-            PersonasViewModel.ts (Singleton, MobX)
+            PersonasViewModel.ts
                 + class PersonasViewModel
                     - static instance
                     + personas: PersonaUIModel[] (observable)
@@ -209,11 +218,11 @@ src/
                     + isLoading, error (observable)
                     - personaUseCases: PersonaUseCases
                     + static getInstance() -> Singleton
-                    + async loadPersonas() -> getPersonas, mapea a PersonaUIModel
-                    + async addPersona() -> addPersona, loadPersonas
-                    + async updatePersona() -> updatePersona, loadPersonas
-                    + async deletePersona() -> deletePersona, loadPersonas
-                    + selectPersona()
+                    + async loadPersonas() -> useCases.getPersonas(), mapea a PersonaUIModel[]
+                    + async addPersona(persona) -> useCases.addPersona(), loadPersonas()
+                    + async updatePersona(persona) -> useCases.updatePersona(), loadPersonas()
+                    + async deletePersona(id) -> useCases.deletePersona(), loadPersonas()
+                    + selectPersona(persona | null)
             
             DepartamentosViewModel.ts (Singleton, MobX)
                 + class DepartamentosViewModel
@@ -223,6 +232,6 @@ src/
                     + isLoading, error (observable)
                     - departamentoUseCases: DepartamentoUseCases
                     + static getInstance() -> Singleton
-                    + async loadDepartamentos() -> getDepartamentos, mapea a DepartamentoUIModel
-                    + async addDepartamento(), updateDepartamento(), deleteDepartamento()
-                    + selectDepartamento()
+                    + async loadDepartamentos() -> useCases.getDepartamentos(), mapea a DepartamentoUIModel[]
+                    + async addDepartamento(), updateDepartamento(), deleteDepartamento() -> Llama useCases, loadDepartamentos()
+                    + selectDepartamento(departamento | null)

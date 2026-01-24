@@ -23,9 +23,6 @@ export function DepartamentoListItem({ departamento, onPress, onDelete }: Depart
         
         <View style={styles.content}>
           <Text style={styles.name}>{departamento.nombreDepartamento}</Text>
-          <View style={styles.idBadge}>
-            <Text style={styles.idText}>ID: {departamento.idDepartamento}</Text>
-          </View>
         </View>
       </TouchableOpacity>
       
@@ -92,20 +89,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 17,
     fontWeight: '700',
-    marginBottom: 6,
     color: '#1a1a2e',
-  },
-  idBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  idText: {
-    fontSize: 12,
-    color: '#6c757d',
-    fontWeight: '600',
   },
   deleteButton: {
     width: 44,

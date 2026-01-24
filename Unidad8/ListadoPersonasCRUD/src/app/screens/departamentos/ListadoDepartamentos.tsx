@@ -74,9 +74,6 @@ const ListadoDepartamentos = observer(function ListadoDepartamentos() {
       </View>
       <View style={styles.departamentoInfo}>
         <Text style={styles.departamentoNombre}>{item.nombreDepartamento}</Text>
-        <View style={styles.idBadge}>
-          <Text style={styles.departamentoId}>ID: {item.idDepartamento}</Text>
-        </View>
       </View>
       <TouchableOpacity 
         style={styles.deleteButton}
@@ -226,20 +223,7 @@ const styles = StyleSheet.create({
   departamentoNombre: {
     fontSize: 17,
     fontWeight: '700',
-    marginBottom: 6,
     color: '#1a1a2e',
-  },
-  idBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  departamentoId: {
-    fontSize: 12,
-    color: '#6c757d',
-    fontWeight: '600',
   },
   deleteButton: {
     width: 44,

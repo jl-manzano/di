@@ -6,107 +6,87 @@ export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Header con gradiente */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.gradientHeader}>
-          <View style={styles.headerContent}>
-            <View style={styles.logoContainer}>
-              <View style={styles.logoOuter}>
-                <View style={styles.logoInner}>
-                  <Text style={styles.logoText}>RRHH</Text>
-                </View>
-              </View>
+    <View style={styles.container}>
+      {/* Header limpio */}
+      <View style={styles.header}>
+        <View style={styles.logoCircle}>
+          <Text style={styles.logoEmoji}>🗃️</Text>
+        </View>
+        <Text style={styles.headerTitle}>RRHH</Text>
+        <Text style={styles.headerSubtitle}>Gestión de Recursos Humanos</Text>
+      </View>
+
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Tarjetas principales */}
+        <View style={styles.cardsContainer}>
+          <TouchableOpacity 
+            style={[styles.card, styles.cardPrimary]}
+            onPress={() => router.push('/screens/personas/ListadoPersonasScreen')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.cardIconContainer}>
+              <Text style={styles.cardIcon}>👥</Text>
             </View>
-            <Text style={styles.title}>Gestión de Recursos Humanos</Text>
-            <Text style={styles.subtitle}>Administra tu talento de forma eficiente</Text>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>Personal</Text>
+              <Text style={styles.cardDescription}>
+                Gestiona empleados y contactos
+              </Text>
+            </View>
+            <View style={styles.cardArrow}>
+              <Text style={styles.arrowText}>→</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.card, styles.cardSecondary]}
+            onPress={() => router.push('/screens/departamentos/ListadoDepartamentos')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.cardIconContainer}>
+              <Text style={styles.cardIcon}>🏢</Text>
+            </View>
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>Departamentos</Text>
+              <Text style={styles.cardDescription}>
+                Organiza las áreas de tu empresa
+              </Text>
+            </View>
+            <View style={styles.cardArrow}>
+              <Text style={styles.arrowText}>→</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Info adicional */}
+        <View style={styles.infoSection}>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoIcon}>⚡</Text>
+            <Text style={styles.infoTitle}>Rápido y eficiente</Text>
+            <Text style={styles.infoText}>
+              Accede a toda la información en segundos
+            </Text>
+          </View>
+
+          <View style={styles.infoCard}>
+            <Text style={styles.infoIcon}>🔒</Text>
+            <Text style={styles.infoTitle}>Seguro</Text>
+            <Text style={styles.infoText}>
+              Tus datos protegidos en todo momento
+            </Text>
           </View>
         </View>
-      </View>
 
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <TouchableOpacity 
-          style={styles.statCard}
-          onPress={() => router.push('/screens/personas/ListadoPersonasScreen')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.statNumber}>👥</Text>
-          <Text style={styles.statLabel}>Personal</Text>
-          <View style={styles.statIndicator}>
-            <Text style={styles.statIndicatorText}>Ver →</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.statCard}
-          onPress={() => router.push('/screens/departamentos/ListadoDepartamentos')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.statNumber}>🏢</Text>
-          <Text style={styles.statLabel}>Departamentos</Text>
-          <View style={styles.statIndicator}>
-            <Text style={styles.statIndicatorText}>Ver →</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Main Action Cards */}
-      <View style={styles.cardsSection}>
-        <Text style={styles.sectionTitle}>Módulos Principales</Text>
-        
-        <TouchableOpacity 
-          style={styles.mainCard}
-          onPress={() => router.push('/screens/personas/ListadoPersonasScreen')}
-          activeOpacity={0.95}
-        >
-          <View style={styles.cardGlow} />
-          <View style={styles.cardHeader}>
-            <View style={[styles.mainCardIcon, { backgroundColor: 'rgba(102, 126, 234, 0.2)' }]}>
-              <Text style={styles.mainCardEmoji}>👥</Text>
-            </View>
-            <View style={styles.cardBadge}>
-              <Text style={styles.badgeText}>Principal</Text>
-            </View>
-          </View>
-          <Text style={styles.mainCardTitle}>Gestión de Personal</Text>
-          <Text style={styles.mainCardDescription}>
-            Administra empleados, cargos, contactos y toda la información del personal de tu organización
-          </Text>
-          <View style={styles.cardFooter}>
-            <Text style={styles.cardAction}>Administrar →</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.mainCard}
-          onPress={() => router.push('/screens/departamentos/ListadoDepartamentos')}
-          activeOpacity={0.95}
-        >
-          <View style={styles.cardGlow} />
-          <View style={styles.cardHeader}>
-            <View style={[styles.mainCardIcon, { backgroundColor: 'rgba(240, 147, 251, 0.2)' }]}>
-              <Text style={styles.mainCardEmoji}>🏢</Text>
-            </View>
-            <View style={[styles.cardBadge, { backgroundColor: '#f0f0f0' }]}>
-              <Text style={[styles.badgeText, { color: '#6c757d' }]}>Organización</Text>
-            </View>
-          </View>
-          <Text style={styles.mainCardTitle}>Gestión de Departamentos</Text>
-          <Text style={styles.mainCardDescription}>
-            Organiza y estructura las diferentes áreas y departamentos de tu empresa
-          </Text>
-          <View style={styles.cardFooter}>
-            <Text style={styles.cardAction}>Administrar →</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Sistema RRHH v1.0 • 2025</Text>
-        <Text style={styles.footerSubtext}>Gestión Integral de Recursos Humanos</Text>
-      </View>
-    </ScrollView>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Sistema RRHH v1.0</Text>
+          <Text style={styles.footerSubtext}>2025 • Gestión Integral</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -115,203 +95,154 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  contentContainer: {
-    paddingBottom: 30,
-  },
-  headerWrapper: {
-    marginBottom: -30,
-  },
-  gradientHeader: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 50,
+  header: {
     backgroundColor: '#667eea',
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     shadowColor: '#667eea',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowRadius: 12,
     elevation: 8,
   },
-  headerContent: {
-    alignItems: 'center',
-  },
-  logoContainer: {
-    marginBottom: 20,
-  },
-  logoOuter: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 8,
-  },
-  logoInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 42,
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 5,
   },
-  logoText: {
+  logoEmoji: {
+    fontSize: 40,
+  },
+  headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#667eea',
-    letterSpacing: 1,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
     color: '#fff',
+    marginBottom: 6,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
+    color: 'rgba(255, 255, 255, 0.85)',
   },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    gap: 12,
-  },
-  statCard: {
+  content: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 20,
+  },
+  cardsContainer: {
     padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    gap: 16,
   },
-  statNumber: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  statLabel: {
-    fontSize: 13,
-    color: '#6c757d',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  statIndicator: {
-    marginTop: 4,
-  },
-  statIndicatorText: {
-    fontSize: 11,
-    color: '#667eea',
-    fontWeight: '700',
-  },
-  cardsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1a1a2e',
-    marginBottom: 16,
-    paddingLeft: 4,
-  },
-  mainCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  cardGlow: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(102, 126, 234, 0.08)',
-  },
-  cardHeader: {
+  card: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 20,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  mainCardIcon: {
+  cardPrimary: {
+    backgroundColor: '#fff',
+  },
+  cardSecondary: {
+    backgroundColor: '#fff',
+  },
+  cardIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 18,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  cardIcon: {
+    fontSize: 32,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1a1a2e',
+    marginBottom: 4,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#6c757d',
+    lineHeight: 20,
+  },
+  cardArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#667eea',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  mainCardEmoji: {
-    fontSize: 32,
-  },
-  cardBadge: {
-    backgroundColor: '#667eea',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  badgeText: {
+  arrowText: {
+    fontSize: 20,
     color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: 'bold',
   },
-  mainCardTitle: {
-    fontSize: 22,
+  infoSection: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 30,
+    gap: 12,
+  },
+  infoCard: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  infoIcon: {
+    fontSize: 36,
+    marginBottom: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1a1a2e',
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  mainCardDescription: {
-    fontSize: 14,
+  infoText: {
+    fontSize: 13,
     color: '#6c757d',
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  cardFooter: {
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: 16,
-  },
-  cardAction: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#667eea',
+    textAlign: 'center',
   },
   footer: {
-    padding: 20,
+    padding: 30,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#adb5bd',
     fontWeight: '600',
     marginBottom: 4,
   },
   footerSubtext: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#ced4da',
   },
 });
