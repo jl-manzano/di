@@ -35,21 +35,21 @@ export default function RootLayout() {
         name="screens/personas/ListadoPersonasScreen" 
         options={{ 
           title: 'Personal',
-          headerShown: false  // Ocultar porque el componente tiene su propio header
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="screens/personas/EditarInsertarPersonaScreen" 
         options={{ 
           title: 'Gestionar Persona',
-          headerShown: false  // Ocultar porque el componente tiene su propio header
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="screens/departamentos/ListadoDepartamentos" 
         options={{ 
           title: 'Departamentos',
-          headerShown: false  // Ocultar porque el componente tiene su propio header
+          headerShown: false
         }} 
       />
     </Stack>

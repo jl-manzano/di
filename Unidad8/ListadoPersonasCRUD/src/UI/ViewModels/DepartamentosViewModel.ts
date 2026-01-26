@@ -93,7 +93,7 @@ export class DepartamentosViewModel {
       await this.loadDepartamentos();
     } catch (err) {
       this.handleError(err, 'Error al eliminar departamento');
-      throw err; // Re-throw para que la UI pueda manejarlo
+      throw err;
     }
   }
 

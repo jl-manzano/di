@@ -149,7 +149,7 @@ const EditarInsertarPersonaScreen = observer(function EditarInsertarPersonaScree
             value={foto}
             onChangeText={(text) => {
               setFoto(text);
-              setImageError(false); // Resetear error cuando cambia la URL
+              setImageError(false);
             }}
             placeholder="https://ejemplo.com/foto.jpg"
             placeholderTextColor="#adb5bd"

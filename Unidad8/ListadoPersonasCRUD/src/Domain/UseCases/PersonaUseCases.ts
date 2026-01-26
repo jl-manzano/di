@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { IPersonaUseCases } from '../../Domain/Interfaces/Persona/IPersonaUseCases';
-import { IPersonaRepository } from '../../Domain/Interfaces/Persona/IPersonaRepository';  // Asegúrate de importar la interfaz correcta
+import { IPersonaRepository } from '../../Domain/Interfaces/Persona/IPersonaRepository';
 import { PersonaDTO } from '../../Domain/DTOs/PersonaDTO';
 import { Persona } from '../../Domain/Entities/Persona';
 import { TYPES } from '../../Core/types';
@@ -8,7 +8,7 @@ import { TYPES } from '../../Core/types';
 @injectable()
 export class PersonaUseCases implements IPersonaUseCases {
   constructor(
-    @inject(TYPES.PersonaRepository) private personaRepository: IPersonaRepository  // Usa la interfaz, no la clase concreta
+    @inject(TYPES.PersonaRepository) private personaRepository: IPersonaRepository
   ) {}
 
   async getPersonas(): Promise<PersonaDTO[]> {

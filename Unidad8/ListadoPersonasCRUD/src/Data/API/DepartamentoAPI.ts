@@ -93,6 +93,5 @@ export class DepartamentoApi {
       throw new Error(`Error al eliminar departamento: ${errorText || response.statusText}`);
     }
     
-    // DELETE usualmente no devuelve contenido (204 No Content)
   }
 }

@@ -26,7 +26,6 @@ export class PersonaApi {
       const uploadResponse = await fetch(url, {
         method: 'POST',
         body: formData,
-        // No incluir Content-Type header, el navegador lo establecerá automáticamente con el boundary correcto
       });
 
       if (!uploadResponse.ok) {

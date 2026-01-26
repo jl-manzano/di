@@ -90,7 +90,6 @@ const ListadoDepartamentos = observer(function ListadoDepartamentos() {
 
   return (
     <View style={styles.container}>
-      {/* Header con flecha SIEMPRE visible */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <TouchableOpacity 

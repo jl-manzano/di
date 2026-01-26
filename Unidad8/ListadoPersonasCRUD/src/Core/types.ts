@@ -10,7 +10,7 @@ export const TYPES = {
   PersonaRepository: Symbol.for('PersonaRepository'),
   DepartamentoRepository: Symbol.for('DepartamentoRepository'),
   
-  // Use Cases (agregados como clases únicas)
+  // Use Cases
   PersonaUseCases: Symbol.for('PersonaUseCases'),
   DepartamentoUseCases: Symbol.for('DepartamentoUseCases'),
 };
