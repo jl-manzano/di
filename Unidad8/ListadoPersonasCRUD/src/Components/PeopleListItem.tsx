@@ -10,17 +10,12 @@ interface PersonaListItemProps {
 
 export function PersonaListItem({ persona, onPress, onDelete }: PersonaListItemProps) {
   const [imageError, setImageError] = useState(false);
-  
-  // Verificar si hay foto y si no ha fallado la carga
   const shouldShowImage = persona.foto && persona.foto.trim() !== '' && !imageError;
+  const fullName = `${persona.nombre} ${persona.apellidos}`;
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.mainContent}
-        onPress={onPress} 
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.mainContent} onPress={onPress} activeOpacity={0.7}>
         <View style={[styles.avatar, { backgroundColor: persona.color }]}>
           {shouldShowImage ? (
             <>
@@ -42,21 +37,18 @@ export function PersonaListItem({ persona, onPress, onDelete }: PersonaListItemP
             </>
           )}
         </View>
-        
         <View style={styles.content}>
-          <Text style={styles.name}>
-            {persona.nombre} {persona.apellidos}
-          </Text>
+          <Text style={styles.name}>{fullName}</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoIcon}>📞</Text>
             <Text style={styles.info}>{persona.telefono}</Text>
           </View>
-          <View style={styles.departmentBadge}>
-            <Text style={styles.departmentText}>{persona.nombreDepartamento}</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoIcon}>🏢</Text>
+            <Text style={styles.info}>{persona.nombreDepartamento || 'Sin departamento'}</Text>
           </View>
         </View>
       </TouchableOpacity>
-      
       <TouchableOpacity 
         style={styles.deleteButton} 
         onPress={() => {
@@ -135,7 +127,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   infoIcon: {
     fontSize: 12,
@@ -144,18 +136,6 @@ const styles = StyleSheet.create({
   info: {
     fontSize: 14,
     color: '#6c757d',
-  },
-  departmentBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#e3f2fd',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  departmentText: {
-    fontSize: 12,
-    color: '#1976d2',
-    fontWeight: '600',
   },
   deleteButton: {
     width: 44,

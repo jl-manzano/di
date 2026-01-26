@@ -1,4 +1,5 @@
 import { PersonaDTO } from '../../Domain/DTOs/PersonaDTO';
+import { DepartamentosViewModel } from '../ViewModels/DepartamentosViewModel';
 
 export interface PersonaUIModel extends PersonaDTO {
   color?: string;
@@ -14,8 +15,17 @@ export const toPersonaUIModel = (dto: PersonaDTO): PersonaUIModel => {
   
   const initials = `${dto.nombre.charAt(0)}${dto.apellidos.charAt(0)}`.toUpperCase();
   
+  // Si el nombreDepartamento está vacío, intentar obtenerlo del ViewModel de departamentos
+  let nombreDepartamento = dto.nombreDepartamento;
+  if (!nombreDepartamento || nombreDepartamento.trim() === '') {
+    const departamentosVM = DepartamentosViewModel.getInstance();
+    const departamento = departamentosVM.departamentos.find(d => d.idDepartamento === dto.idDepartamento);
+    nombreDepartamento = departamento ? departamento.nombreDepartamento : 'Sin departamento';
+  }
+  
   return {
     ...dto,
+    nombreDepartamento,
     color: assignedColor,
     initials,
   };
