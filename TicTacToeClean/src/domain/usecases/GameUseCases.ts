@@ -1,28 +1,14 @@
-/**
- * DOMAIN LAYER - Casos de Uso del Juego
- * 
- * Implementa la lógica de negocio para gestionar el juego
- * Recibe la conexión SignalR inyectada desde la capa de datos
- */
-
 import { injectable, inject } from 'inversify';
 import { GameState } from '../entities/GameState';
+import { Room } from '../entities/Room';
 import { IGameUseCases } from '../interfaces/IGameUseCases';
-import { ISignalRConnection } from '../../data/SignalRConnection'; // ← Import correcto
+import { ISignalRConnection } from '../../data/SignalRConnection';
 import { TYPES } from '../../core/types';
 
-/**
- * Implementación de casos de uso para el juego
- * @injectable - Marca la clase como inyectable por InversifyJS
- */
 @injectable()
 export class GameUseCases implements IGameUseCases {
   private connection: ISignalRConnection;
 
-  /**
-   * Constructor con inyección de dependencias
-   * @inject - Inyecta la conexión SignalR desde la capa de datos
-   */
   constructor(
     @inject(TYPES.ISignalRConnection) connection: ISignalRConnection
   ) {
@@ -30,9 +16,6 @@ export class GameUseCases implements IGameUseCases {
     console.log('🔧 GameUseCases creado con conexión inyectada');
   }
 
-  /**
-   * Inicializa la conexión con SignalR
-   */
   async initializeConnection(): Promise<void> {
     try {
       console.log('🚀 Inicializando conexión...');
@@ -44,9 +27,6 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  /**
-   * Realiza un movimiento en el tablero
-   */
   async makeMove(position: number): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
@@ -66,9 +46,6 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  /**
-   * Reinicia el juego
-   */
   async resetGame(): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
@@ -84,9 +61,6 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  /**
-   * Solicita el estado actual del juego
-   */
   async getGameState(): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
@@ -102,9 +76,6 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  /**
-   * Registra un callback para recibir actualizaciones del estado
-   */
   onGameStateUpdated(callback: (gameState: GameState) => void): void {
     console.log('👂 Registrando listener para GameStateUpdated...');
 
@@ -128,25 +99,83 @@ export class GameUseCases implements IGameUseCases {
     console.log('✅ Listener registrado');
   }
 
-  /**
-   * Cierra la conexión con el servidor
-   */
+  // ========== NUEVOS MÉTODOS PARA SALAS ==========
+
+  async createRoom(roomName: string): Promise<void> {
+    if (!this.connection.isConnected()) {
+      throw new Error('No hay conexión con el servidor');
+    }
+
+    try {
+      console.log('🏗️ Creando sala:', roomName);
+      await this.connection.invoke('CreateRoom', roomName);
+      console.log('✅ Sala creada');
+    } catch (error: any) {
+      console.error('❌ Error al crear sala:', error);
+      throw new Error(`Error al crear sala: ${error.message}`);
+    }
+  }
+
+  async joinRoom(roomId: string, playerName: string = 'Jugador'): Promise<void> {
+    if (!this.connection.isConnected()) {
+      throw new Error('No hay conexión con el servidor');
+    }
+
+    try {
+      console.log('🚪 Uniéndose a sala:', roomId);
+      await this.connection.invoke('JoinRoom', roomId, playerName);
+      console.log('✅ Unido a sala');
+    } catch (error: any) {
+      console.error('❌ Error al unirse a sala:', error);
+      throw new Error(`Error al unirse a sala: ${error.message}`);
+    }
+  }
+
+  async getRoomList(): Promise<void> {
+    if (!this.connection.isConnected()) {
+      throw new Error('No hay conexión con el servidor');
+    }
+
+    try {
+      console.log('📥 Solicitando lista de salas...');
+      await this.connection.invoke('GetRoomList');
+      console.log('✅ Lista de salas solicitada');
+    } catch (error: any) {
+      console.error('❌ Error al solicitar lista:', error);
+      throw new Error(`Error al obtener lista: ${error.message}`);
+    }
+  }
+
+  onRoomListUpdated(callback: (rooms: Room[]) => void): void {
+    console.log('👂 Registrando listener para RoomListUpdated...');
+
+    this.connection.on('RoomListUpdated', (roomsJSON: any[]) => {
+      console.log('📩 Lista de salas recibida:', roomsJSON);
+      
+      try {
+        const rooms = roomsJSON.map(json => Room.fromJSON(json));
+        console.log('✅ Salas parseadas:', rooms.length);
+        callback(rooms);
+      } catch (error) {
+        console.error('❌ Error parseando salas:', error);
+      }
+    });
+
+    console.log('✅ Listener de salas registrado');
+  }
+
+  // ========== FIN NUEVOS MÉTODOS ==========
+
   async disconnect(): Promise<void> {
     console.log('🔌 Desconectando...');
     await this.connection.stop();
     console.log('✅ Desconectado');
   }
 
-  /**
-   * Verifica si hay conexión activa
-   */
   isConnected(): boolean {
     return this.connection.isConnected();
   }
 
-  /**
-   * Obtiene el ID de conexión actual
-   */
   getConnectionId(): string | null {
     return this.connection.getConnectionId();
   }

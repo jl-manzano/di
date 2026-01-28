@@ -1,65 +1,66 @@
-/**
- * APP.TSX - Entrada de la aplicación
- * Inicializa el contenedor IoC y renderiza la pantalla principal
- */
-
 import 'reflect-metadata';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-// Contenedor IoC
+import { observer } from 'mobx-react-lite';
+import { runInAction } from 'mobx';
 import { container, setupDependencies } from '../core/container';
 import { TYPES } from '../core/types';
-
-// Tipos
 import type { GameViewModel } from '../UI/viewmodels/GameViewModel';
 import type { AppConfig } from '../core/types';
-
-// Componentes
+import RoomListScreen from '../UI/screens/RoomListScreen';
+import CreateRoomScreen from '../UI/screens/CreateRoomScreen';
 import GameScreen from '../UI/screens/GameScreen';
 
-// ==========================================
-// CONFIGURACIÓN E INICIALIZACIÓN
-// ==========================================
-const HUB_URL = "http://192.168.1.129:5251/gameHub";  // ✅ Tu IP real
+const HUB_URL = "http://192.168.100.178:5251/gameHub";
 
-const appConfig: AppConfig = {
-  hubUrl: HUB_URL,
-  autoReconnect: true,
-  logLevel: 'debug'
-};
-
-// Inicializar contenedor IoC ANTES de exportar el componente
-console.log('🚀 Inicializando contenedor IoC...');
+const appConfig: AppConfig = { hubUrl: HUB_URL, autoReconnect: true, logLevel: 'debug' };
 setupDependencies(appConfig);
-console.log('✅ Contenedor IoC inicializado\n');
 
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
-export default function App() {
-  // Obtener ViewModel del contenedor IoC
+const App = observer(() => {
+  const [screen, setScreen] = useState<'roomList' | 'game'>('roomList');
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const viewModel = container.get<GameViewModel>(TYPES.GameViewModel);
 
   useEffect(() => {
-    console.log('🎮 App montada');
-    console.log('✅ GameViewModel obtenido del contenedor');
-    console.log('🔗 Hub URL:', HUB_URL);
+    viewModel.initialize();
   }, []);
+
+  const handleCreateRoom = () => runInAction(() => viewModel.showCreateRoomModal = true);
+  const handleCreateRoomSubmit = async (name: string) => await viewModel.createRoom(name);
+  const handleJoinRoom = async (id: string) => { await viewModel.joinRoom(id); setCurrentRoomId(id); setScreen('game'); };
+  const handleLeaveGame = async () => { setScreen('roomList'); setCurrentRoomId(null); await viewModel.refreshRooms(); };
+  const handleRefreshRooms = async () => await viewModel.refreshRooms();
+
+  if (screen === 'roomList') {
+    return (
+      <SafeAreaProvider>
+        <RoomListScreen
+          rooms={viewModel.rooms}
+          isConnected={viewModel.isConnected}
+          isLoading={viewModel.isLoadingRooms}
+          onCreateRoom={handleCreateRoom}
+          onJoinRoom={handleJoinRoom}
+          onRefresh={handleRefreshRooms}
+        />
+        <CreateRoomScreen
+          visible={viewModel.showCreateRoomModal}
+          onClose={() => runInAction(() => viewModel.showCreateRoomModal = false)}
+          onCreate={handleCreateRoomSubmit}
+        />
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
-        <GameScreen viewModel={viewModel} />
+        <GameScreen viewModel={viewModel} onLeave={handleLeaveGame} />
       </View>
     </SafeAreaProvider>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
 });
+
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#fff' } });
+
+export default App;

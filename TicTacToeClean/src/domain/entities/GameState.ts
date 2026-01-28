@@ -1,6 +1,8 @@
 /**
  * DOMAIN LAYER - Entidad GameState
+ * ✅ MEJORADO: Propiedades observables para MobX
  */
+import { makeObservable, observable } from 'mobx';
 import { Player } from './Player';
 
 export class GameState {
@@ -20,6 +22,17 @@ export class GameState {
     this.playerX = null;
     this.playerO = null;
     this.waitingForPlayer = true;
+
+    // ✅ Hacer que todas las propiedades sean observables
+    makeObservable(this, {
+      board: observable,
+      currentTurn: observable,
+      winner: observable,
+      gameOver: observable,
+      playerX: observable,
+      playerO: observable,
+      waitingForPlayer: observable
+    });
   }
 
   static fromJSON(json: any): GameState {
