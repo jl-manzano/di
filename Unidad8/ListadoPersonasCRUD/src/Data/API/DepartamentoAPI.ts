@@ -70,14 +70,12 @@ export class DepartamentoApi {
       throw new Error('Error al actualizar departamento');
     }
     
-    // Verificar si hay contenido JSON en la respuesta
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
       return new Departamento(data.idDepartamento, data.nombreDepartamento);
     }
     
-    // Si no hay JSON, devolvemos el departamento que enviamos
     return departamento;
   }
 

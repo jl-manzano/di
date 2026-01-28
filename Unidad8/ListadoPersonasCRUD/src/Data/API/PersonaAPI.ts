@@ -14,14 +14,11 @@ export class PersonaApi {
     try {
       const formData = new FormData();
       
-      // En web, necesitamos convertir la URI a un blob
       const response = await fetch(imageUri);
       const blob = await response.blob();
       
-      // Agregar la imagen al FormData
       formData.append('file', blob, 'profile.jpg');
 
-      // Subir al servidor
       const url = this.baseApi.getBaseUrl('/api/Personas/upload-image');
       const uploadResponse = await fetch(url, {
         method: 'POST',
@@ -33,7 +30,6 @@ export class PersonaApi {
       }
 
       const data = await uploadResponse.json();
-      // El servidor debe devolver { url: "https://..." }
       return data.url || data.imageUrl || data.path;
     } catch (error) {
       console.error('Error al subir imagen:', error);
@@ -156,11 +152,9 @@ export class PersonaApi {
       throw new Error(`Error al actualizar persona: ${errorText || response.statusText}`);
     }
     
-    // Verificar si hay contenido en la respuesta
     const text = await response.text();
     console.log('PersonaApi.update - Response text:', text);
     
-    // Si hay contenido JSON, parsearlo
     if (text && text.length > 0) {
       try {
         const data = JSON.parse(text);

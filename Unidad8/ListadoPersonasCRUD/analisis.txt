@@ -21,7 +21,7 @@ src/
             WelcomeScreen.tsx
                 + default function WelcomeScreen()
                     -> useRouter()
-                    -> Renderiza: Header (logo 🗃️, título "RRHH"), 2 cards navegables, info cards, footer
+                    -> Renderiza: Header, 2 cards navegables, info cards, footer
             
             personas/
                 ListadoPersonasScreen.tsx (observer)
@@ -71,18 +71,14 @@ src/
         types.ts
         
         container.ts
-            // Base
             container.bind<BaseApi>(TYPES.BaseApi).to(BaseApi).inSingletonScope();
             
-            // APIs
             container.bind<PersonaApi>(TYPES.PersonaApi).to(PersonaApi).inSingletonScope();
             container.bind<DepartamentoApi>(TYPES.DepartamentoApi).to(DepartamentoApi).inSingletonScope();
             
-            // Repositories
             container.bind<PersonaRepository>(TYPES.PersonaRepository).to(PersonaRepository).inSingletonScope();
             container.bind<DepartamentoRepository>(TYPES.DepartamentoRepository).to(DepartamentoRepository).inSingletonScope();
             
-            // Use Cases
             container.bind<PersonaUseCases>(TYPES.PersonaUseCases).to(PersonaUseCases);
             container.bind<DepartamentoUseCases>(TYPES.DepartamentoUseCases).to(DepartamentoUseCases);
         
@@ -168,7 +164,7 @@ src/
                     + async getAll() -> GET /api/Personas, mapea a PersonaDTO[]
                     + async getById(id) -> GET /api/Personas/{id}
                     + async create(persona) -> POST /api/Personas
-                    + async update(persona) -> PUT /api/Personas/{id}, verifica content-type, maneja respuesta vacía
+                    + async update(persona) -> PUT /api/Personas/{id}
                     + async delete(id) -> DELETE /api/Personas/{id}
             
             DepartamentoApi.ts
@@ -179,7 +175,7 @@ src/
                     + async getAll() -> GET /api/Departamentos
                     + async getById(id) -> GET /api/Departamentos/{id}
                     + async create(departamento) -> POST /api/Departamentos
-                    + async update(departamento) -> PUT /api/Departamentos/{id}, verifica content-type
+                    + async update(departamento) -> PUT /api/Departamentos/{id}
                     + async delete(id) -> DELETE /api/Departamentos/{id}
         
         Repositories/
@@ -202,12 +198,12 @@ src/
             PersonaUIModel.ts
                 + interface PersonaUIModel extends PersonaDTO
                     + color?: string, initials?: string
-                + toPersonaUIModel(dto) -> Asigna color según idDepartamento % 10 (paleta 10 colores), genera iniciales
+                + toPersonaUIModel(dto) -> asigna color según idDepartamento y genera iniciales (si tiene foto registrada válida, pone foto)
             
             DepartamentoUIModel.ts
                 + interface DepartamentoUIModel
                     + idDepartamento, nombreDepartamento, color, icon
-                + toDepartamentoUIModel(departamento) -> Asigna color según id % 10 (paleta compartida), icon 🏢
+                + toDepartamentoUIModel(departamento) -> Asigna color según id
         
         ViewModels/
             PersonasViewModel.ts

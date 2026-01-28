@@ -7,7 +7,6 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header limpio */}
       <View style={styles.header}>
         <View style={styles.logoCircle}>
           <Text style={styles.logoEmoji}>🗃️</Text>
@@ -20,7 +19,6 @@ export default function WelcomeScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tarjetas principales */}
         <View style={styles.cardsContainer}>
           <TouchableOpacity 
             style={[styles.card, styles.cardPrimary]}
@@ -61,7 +59,6 @@ export default function WelcomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Info adicional */}
         <View style={styles.infoSection}>
           <View style={styles.infoCard}>
             <Text style={styles.infoIcon}>⚡</Text>
@@ -80,7 +77,6 @@ export default function WelcomeScreen() {
           </View>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Sistema RRHH v1.0</Text>
           <Text style={styles.footerSubtext}>2025 • Gestión Integral</Text>
