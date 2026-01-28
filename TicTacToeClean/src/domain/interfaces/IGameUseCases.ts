@@ -11,9 +11,10 @@ export interface IGameUseCases {
   isConnected(): boolean;
   getConnectionId(): string | null;
   
-  // NUEVO: Métodos para salas
+  // Métodos para salas
   createRoom(roomName: string): Promise<void>;
   joinRoom(roomId: string, playerName?: string): Promise<void>;
+  leaveRoom(): Promise<void>; // ✅ NUEVO
   getRoomList(): Promise<void>;
   onRoomListUpdated(callback: (rooms: Room[]) => void): void;
 }

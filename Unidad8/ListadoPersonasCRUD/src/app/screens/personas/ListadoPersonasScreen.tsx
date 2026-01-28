@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'expo-router';
 import { PersonasViewModel } from '../../../UI/ViewModels/PersonasViewModel';
@@ -9,6 +9,7 @@ import { PersonaUIModel } from '../../../UI/Models/PersonaUIModel';
 const ListadoPersonasScreen = observer(function ListadoPersonasScreen() {
   const viewModel = PersonasViewModel.getInstance();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     viewModel.loadPersonas();
@@ -51,6 +52,18 @@ const ListadoPersonasScreen = observer(function ListadoPersonasScreen() {
     }
   };
 
+  // Filtrar personas basándose en la búsqueda
+  const filteredPersonas = viewModel.personas.filter(persona => {
+    const fullName = `${persona.nombre} ${persona.apellidos}`.toLowerCase();
+    const departamento = persona.nombreDepartamento.toLowerCase();
+    const telefono = persona.telefono.toLowerCase();
+    const query = searchQuery.toLowerCase();
+    
+    return fullName.includes(query) || 
+           departamento.includes(query) || 
+           telefono.includes(query);
+  });
+
   if (viewModel.isLoading && viewModel.personas.length === 0) {
     return (
       <View style={styles.centerContainer}>
@@ -91,12 +104,35 @@ const ListadoPersonasScreen = observer(function ListadoPersonasScreen() {
           <Text style={styles.headerTitle}>Personal</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          {viewModel.personas.length} persona{viewModel.personas.length !== 1 ? 's' : ''} registrada{viewModel.personas.length !== 1 ? 's' : ''}
+          {filteredPersonas.length} persona{filteredPersonas.length !== 1 ? 's' : ''} registrada{filteredPersonas.length !== 1 ? 's' : ''}
+          {searchQuery && ` (filtrada${filteredPersonas.length !== 1 ? 's' : ''})`}
         </Text>
       </View>
 
+      {/* Barra de búsqueda */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar por nombre, departamento o teléfono..."
+            placeholderTextColor="#adb5bd"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')}
+              style={styles.clearButton}
+            >
+              <Text style={styles.clearIcon}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       <FlatList
-        data={viewModel.personas}
+        data={filteredPersonas}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <PersonaListItem
@@ -108,9 +144,19 @@ const ListadoPersonasScreen = observer(function ListadoPersonasScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>👥</Text>
-            <Text style={styles.emptyText}>No hay personas registradas</Text>
-            <Text style={styles.emptySubtext}>Toca el botón + para agregar la primera persona</Text>
+            <Text style={styles.emptyIcon}>
+              {searchQuery ? '🔍' : '👥'}
+            </Text>
+            <Text style={styles.emptyText}>
+              {searchQuery 
+                ? 'No se encontraron personas' 
+                : 'No hay personas registradas'}
+            </Text>
+            <Text style={styles.emptySubtext}>
+              {searchQuery 
+                ? `No hay resultados para "${searchQuery}"` 
+                : 'Toca el botón + para agregar la primera persona'}
+            </Text>
           </View>
         }
       />
@@ -167,6 +213,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 44,
+  },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#1a1a2e',
+  },
+  clearButton: {
+    padding: 4,
+  },
+  clearIcon: {
+    fontSize: 18,
+    color: '#6c757d',
   },
   centerContainer: {
     flex: 1,

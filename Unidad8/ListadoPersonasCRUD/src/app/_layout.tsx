@@ -52,6 +52,13 @@ export default function RootLayout() {
           headerShown: false
         }} 
       />
+      <Stack.Screen 
+        name="screens/departamentos/EditarInsertarDepartamento" 
+        options={{ 
+          title: 'Gestionar Departamento',
+          headerShown: false
+        }} 
+      />
     </Stack>
   );
 }

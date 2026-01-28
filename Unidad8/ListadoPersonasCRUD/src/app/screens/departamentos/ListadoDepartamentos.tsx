@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'expo-router';
 import { DepartamentosViewModel } from '../../../UI/ViewModels/DepartamentosViewModel';
@@ -8,10 +8,21 @@ import { DepartamentoUIModel } from '../../../UI/Models/DepartamentoUIModel';
 const ListadoDepartamentos = observer(function ListadoDepartamentos() {
   const viewModel = DepartamentosViewModel.getInstance();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     viewModel.loadDepartamentos();
   }, []);
+
+  const handleAddDepartamento = () => {
+    viewModel.selectDepartamento(null);
+    router.push('/screens/departamentos/EditarInsertarDepartamento');
+  };
+
+  const handleEditDepartamento = (departamento: DepartamentoUIModel) => {
+    viewModel.selectDepartamento(departamento);
+    router.push('/screens/departamentos/EditarInsertarDepartamento');
+  };
 
   const handleDeleteDepartamento = (departamento: DepartamentoUIModel) => {
     console.log('handleDeleteDepartamento llamado para:', departamento.nombreDepartamento);
@@ -39,6 +50,11 @@ const ListadoDepartamentos = observer(function ListadoDepartamentos() {
       window.alert(`Error: ${errorMessage}`);
     }
   };
+
+  // Filtrar departamentos basándose en la búsqueda
+  const filteredDepartamentos = viewModel.departamentos.filter(dep => 
+    dep.nombreDepartamento.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (viewModel.isLoading && viewModel.departamentos.length === 0) {
     return (
@@ -68,13 +84,19 @@ const ListadoDepartamentos = observer(function ListadoDepartamentos() {
 
   const renderDepartamento = ({ item }: { item: DepartamentoUIModel }) => (
     <View style={styles.departamentoCard}>
-      <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
-        <Text style={styles.icon}>{item.icon}</Text>
-        <View style={styles.iconOverlay} />
-      </View>
-      <View style={styles.departamentoInfo}>
-        <Text style={styles.departamentoNombre}>{item.nombreDepartamento}</Text>
-      </View>
+      <TouchableOpacity 
+        style={styles.mainContent}
+        onPress={() => handleEditDepartamento(item)}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
+          <Text style={styles.icon}>{item.icon}</Text>
+          <View style={styles.iconOverlay} />
+        </View>
+        <View style={styles.departamentoInfo}>
+          <Text style={styles.departamentoNombre}>{item.nombreDepartamento}</Text>
+        </View>
+      </TouchableOpacity>
       <TouchableOpacity 
         style={styles.deleteButton}
         onPress={() => {
@@ -102,23 +124,65 @@ const ListadoDepartamentos = observer(function ListadoDepartamentos() {
           <Text style={styles.headerTitle}>Departamentos</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          {viewModel.departamentos.length} departamento{viewModel.departamentos.length !== 1 ? 's' : ''}
+          {filteredDepartamentos.length} departamento{filteredDepartamentos.length !== 1 ? 's' : ''}
+          {searchQuery && ` (filtrado${filteredDepartamentos.length !== 1 ? 's' : ''})`}
         </Text>
+      </View>
+
+      {/* Barra de búsqueda */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar departamento..."
+            placeholderTextColor="#adb5bd"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')}
+              style={styles.clearButton}
+            >
+              <Text style={styles.clearIcon}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       
       <FlatList
-        data={viewModel.departamentos}
+        data={filteredDepartamentos}
         keyExtractor={(item) => item.idDepartamento.toString()}
         renderItem={renderDepartamento}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🏢</Text>
-            <Text style={styles.emptyText}>No hay departamentos registrados</Text>
-            <Text style={styles.emptySubtext}>Comienza agregando tu primer departamento</Text>
+            <Text style={styles.emptyIcon}>
+              {searchQuery ? '🔍' : '🏢'}
+            </Text>
+            <Text style={styles.emptyText}>
+              {searchQuery 
+                ? 'No se encontraron departamentos' 
+                : 'No hay departamentos registrados'}
+            </Text>
+            <Text style={styles.emptySubtext}>
+              {searchQuery 
+                ? `No hay resultados para "${searchQuery}"` 
+                : 'Toca el botón + para agregar el primer departamento'}
+            </Text>
           </View>
         }
       />
+
+      {/* Botón flotante para agregar */}
+      <TouchableOpacity 
+        style={styles.fab} 
+        onPress={handleAddDepartamento}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 });
@@ -165,6 +229,38 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 44,
   },
+  searchContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#1a1a2e',
+  },
+  clearButton: {
+    padding: 4,
+  },
+  clearIcon: {
+    fontSize: 18,
+    color: '#6c757d',
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -178,6 +274,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingBottom: 100,
   },
   departamentoCard: {
     flexDirection: 'row',
@@ -193,6 +290,11 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: '#f0f0f0',
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconContainer: {
     width: 56,
@@ -285,5 +387,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6c757d',
     textAlign: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 36,
+    fontWeight: '300',
+    lineHeight: 36,
   },
 });

@@ -99,7 +99,7 @@ export class GameUseCases implements IGameUseCases {
     console.log('✅ Listener registrado');
   }
 
-  // ========== NUEVOS MÉTODOS PARA SALAS ==========
+  // ========== MÉTODOS PARA SALAS ==========
 
   async createRoom(roomName: string): Promise<void> {
     if (!this.connection.isConnected()) {
@@ -128,6 +128,22 @@ export class GameUseCases implements IGameUseCases {
     } catch (error: any) {
       console.error('❌ Error al unirse a sala:', error);
       throw new Error(`Error al unirse a sala: ${error.message}`);
+    }
+  }
+
+  // ✅ NUEVO: Método para salir de una sala
+  async leaveRoom(): Promise<void> {
+    if (!this.connection.isConnected()) {
+      throw new Error('No hay conexión con el servidor');
+    }
+
+    try {
+      console.log('🚪 Saliendo de la sala...');
+      await this.connection.invoke('LeaveRoom');
+      console.log('✅ Salió de la sala');
+    } catch (error: any) {
+      console.error('❌ Error al salir de la sala:', error);
+      throw new Error(`Error al salir de la sala: ${error.message}`);
     }
   }
 
@@ -164,7 +180,7 @@ export class GameUseCases implements IGameUseCases {
     console.log('✅ Listener de salas registrado');
   }
 
-  // ========== FIN NUEVOS MÉTODOS ==========
+  // ========== FIN MÉTODOS PARA SALAS ==========
 
   async disconnect(): Promise<void> {
     console.log('🔌 Desconectando...');
