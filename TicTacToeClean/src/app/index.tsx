@@ -1,43 +1,65 @@
 /**
- * APP - Punto de entrada principal
- * 
- * Configura la inyección de dependencias con InversifyJS
- * y renderiza la pantalla principal del juego
+ * APP.TSX - Entrada de la aplicación
+ * Inicializa el contenedor IoC y renderiza la pantalla principal
  */
 
-import 'reflect-metadata'; // IMPORTANTE: Debe ser la primera importación
-import React from 'react';
+import 'reflect-metadata';
+import { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// Contenedor IoC
+import { container, setupDependencies } from '../core/container';
+import { TYPES } from '../core/types';
+
+// Tipos
+import type { GameViewModel } from '../UI/viewmodels/GameViewModel';
+import type { AppConfig } from '../core/types';
+
+// Componentes
 import GameScreen from '../UI/screens/GameScreen';
-import { setupDependencies, getGameViewModel } from '../core/container';
 
 // ==========================================
-// CONFIGURACIÓN - CAMBIA ESTA URL
+// CONFIGURACIÓN E INICIALIZACIÓN
 // ==========================================
-const HUB_URL = 'http://localhost:5251/gameHub';
-// CONFIGURAR INYECCIÓN DE DEPENDENCIAS
-// ==========================================
-// Esto se ejecuta UNA SOLA VEZ al inicio de la aplicación
-setupDependencies({
+const HUB_URL = "http://192.168.1.129:5251/gameHub";  // ✅ Tu IP real
+
+const appConfig: AppConfig = {
   hubUrl: HUB_URL,
   autoReconnect: true,
   logLevel: 'debug'
-});
+};
 
-/**
- * Componente principal de la aplicación TicTacToe
- * 
- * Arquitectura implementada:
- * - Clean Architecture (capas bien definidas)
- * - MVVM (Model-View-ViewModel)
- * - Dependency Injection con InversifyJS
- * - Reactive state management con MobX
- */
+// Inicializar contenedor IoC ANTES de exportar el componente
+console.log('🚀 Inicializando contenedor IoC...');
+setupDependencies(appConfig);
+console.log('✅ Contenedor IoC inicializado\n');
+
+// ==========================================
+// COMPONENTE PRINCIPAL
+// ==========================================
 export default function App() {
-  // Obtener el ViewModel del contenedor IoC de InversifyJS
-  // Esta instancia es un Singleton compartido en toda la app
-  const gameViewModel = getGameViewModel();
-  
-  console.log('🎨 App renderizada con InversifyJS');
-  
-  return <GameScreen viewModel={gameViewModel} />;
+  // Obtener ViewModel del contenedor IoC
+  const viewModel = container.get<GameViewModel>(TYPES.GameViewModel);
+
+  useEffect(() => {
+    console.log('🎮 App montada');
+    console.log('✅ GameViewModel obtenido del contenedor');
+    console.log('🔗 Hub URL:', HUB_URL);
+  }, []);
+
+  return (
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        <GameScreen viewModel={viewModel} />
+      </View>
+    </SafeAreaProvider>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+});

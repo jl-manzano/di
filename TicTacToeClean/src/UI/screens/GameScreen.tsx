@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import {
   View,
@@ -17,9 +17,9 @@ interface GameScreenProps {
 }
 
 const { width } = Dimensions.get('window');
-const CELL_SIZE = (width - 80) / 3; // 3 columnas con padding
+const CELL_SIZE = (width - 80) / 3;
 
-const GameScreen: React.FC<GameScreenProps> = observer(({ viewModel }) => {
+const GameScreen = observer(({ viewModel }: GameScreenProps) => {
   useEffect(() => {
     viewModel.initialize();
     return () => {
