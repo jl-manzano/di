@@ -1,7 +1,7 @@
 /**
  * CORE - Contenedor de Inyección de Dependencias con InversifyJS
+ * ✅ MEJORADO: Crea contenedores únicos por instancia de App
  */
-
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import { ISignalRConnection, SignalRConnection } from '../data/SignalRConnection';
@@ -11,91 +11,85 @@ import { GameViewModel } from '../UI/viewmodels/GameViewModel';
 import { AppConfig, TYPES } from './types';
 
 /**
- * Contenedor IoC global (Singleton)
+ * ✅ NUEVO: Función que crea un contenedor único
+ * Esto permite que cada instancia de la App tenga su propio contenedor
  */
-export const container = new Container();
-
-/**
- * Configura todas las dependencias de la aplicación
- * Este método se ejecuta una sola vez al inicio
- */
-export function setupDependencies(config: AppConfig): void {
-  console.log('🔧 Configurando inyección de dependencias con InversifyJS...');
+export function createContainer(config: AppConfig): Container {
+  const container = new Container();
+  
+  console.log('🔧 Creando nuevo contenedor de dependencias...');
   console.log(`   Hub URL: ${config.hubUrl}`);
   console.log(`   Auto Reconnect: ${config.autoReconnect}`);
   console.log(`   Log Level: ${config.logLevel}`);
 
-  // 1. Registrar configuración como valor constante
+  // 1. Registrar configuración
   container.bind<AppConfig>(TYPES.AppConfig).toConstantValue(config);
-  
-  // 2. Registrar HubUrl como valor constante (para inyección directa)
   container.bind<string>(TYPES.HubUrl).toConstantValue(config.hubUrl);
 
-  // 3. Registrar SignalRConnection (Data Layer) como Singleton
-  // ⭐ ESTO ES LO QUE FALTA EN TU CÓDIGO ⭐
+  // 2. Registrar SignalRConnection como Singleton (dentro de este contenedor)
   container.bind<ISignalRConnection>(TYPES.ISignalRConnection)
     .to(SignalRConnection)
     .inSingletonScope();
 
-  // 4. Registrar GameUseCases (Domain Layer) como Singleton
-  // Recibe ISignalRConnection inyectado
+  // 3. Registrar GameUseCases como Singleton (dentro de este contenedor)
   container.bind<IGameUseCases>(TYPES.IGameUseCases)
     .to(GameUseCases)
     .inSingletonScope();
 
-  // 5. Registrar GameViewModel (Application Layer) como Singleton
+  // 4. Registrar GameViewModel como Singleton (dentro de este contenedor)
   container.bind<GameViewModel>(TYPES.GameViewModel)
     .to(GameViewModel)
     .inSingletonScope();
 
-  console.log('✅ Inyección de dependencias configurada correctamente\n');
-  console.log('📦 Servicios registrados:');
-  console.log(`   - ${TYPES.AppConfig.toString()}: AppConfig`);
-  console.log(`   - ${TYPES.HubUrl.toString()}: HubUrl`);
-  console.log(`   - ${TYPES.ISignalRConnection.toString()}: SignalRConnection (Data Layer)`);
-  console.log(`   - ${TYPES.IGameUseCases.toString()}: GameUseCases (Domain Layer)`);
-  console.log(`   - ${TYPES.GameViewModel.toString()}: GameViewModel (Application Layer)\n`);
+  console.log('✅ Contenedor creado correctamente\n');
   
-  console.log('🏗️ Arquitectura en capas:');
-  console.log('   Data Layer → SignalRConnection');
-  console.log('   Domain Layer → GameUseCases (usa SignalRConnection)');
-  console.log('   Application Layer → GameViewModel (usa GameUseCases)');
-  console.log('   Presentation Layer → GameScreen (usa GameViewModel)\n');
+  return container;
 }
 
 /**
- * Helper para obtener el GameViewModel
- * Simplifica el acceso desde componentes
+ * ❌ OBSOLETO: No uses un contenedor global
+ * En su lugar, cada instancia de App debe crear su propio contenedor
  */
-export function getGameViewModel(): GameViewModel {
+// export const container = new Container();
+
+/**
+ * ❌ OBSOLETO: No uses setupDependencies global
+ * En su lugar, usa createContainer directamente
+ */
+// export function setupDependencies(config: AppConfig): void { ... }
+
+/**
+ * Helper para obtener el GameViewModel de un contenedor
+ */
+export function getGameViewModel(container: Container): GameViewModel {
   return container.get<GameViewModel>(TYPES.GameViewModel);
 }
 
 /**
- * Helper para obtener la configuración
+ * Helper para obtener la configuración de un contenedor
  */
-export function getAppConfig(): AppConfig {
+export function getAppConfig(container: Container): AppConfig {
   return container.get<AppConfig>(TYPES.AppConfig);
 }
 
 /**
- * Helper para obtener GameUseCases
+ * Helper para obtener GameUseCases de un contenedor
  */
-export function getGameUseCases(): IGameUseCases {
+export function getGameUseCases(container: Container): IGameUseCases {
   return container.get<IGameUseCases>(TYPES.IGameUseCases);
 }
 
 /**
- * Helper para obtener la conexión SignalR
+ * Helper para obtener la conexión SignalR de un contenedor
  */
-export function getSignalRConnection(): ISignalRConnection {
+export function getSignalRConnection(container: Container): ISignalRConnection {
   return container.get<ISignalRConnection>(TYPES.ISignalRConnection);
 }
 
 /**
- * Limpia el contenedor (útil para testing)
+ * Limpia un contenedor (útil para testing o cleanup)
  */
-export function clearContainer(): void {
+export function clearContainer(container: Container): void {
   container.unbindAll();
-  console.log('🧹 Contenedor InversifyJS limpiado');
+  console.log('🧹 Contenedor limpiado');
 }

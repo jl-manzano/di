@@ -1,5 +1,9 @@
+/**
+ * DOMAIN LAYER - Casos de Uso del Juego
+ * Implementa la lógica de negocio usando broadcast (retransmisión)
+ * NO espera validación del servidor
+ */
 import { injectable, inject } from 'inversify';
-import { GameState } from '../entities/GameState';
 import { Room } from '../entities/Room';
 import { IGameUseCases } from '../interfaces/IGameUseCases';
 import { ISignalRConnection } from '../../data/SignalRConnection';
@@ -16,6 +20,8 @@ export class GameUseCases implements IGameUseCases {
     console.log('🔧 GameUseCases creado con conexión inyectada');
   }
 
+  // ========== CONEXIÓN ==========
+
   async initializeConnection(): Promise<void> {
     try {
       console.log('🚀 Inicializando conexión...');
@@ -27,7 +33,27 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  async makeMove(position: number): Promise<void> {
+  async disconnect(): Promise<void> {
+    console.log('🔌 Desconectando...');
+    await this.connection.stop();
+    console.log('✅ Desconectado');
+  }
+
+  isConnected(): boolean {
+    return this.connection.isConnected();
+  }
+
+  getConnectionId(): string | null {
+    return this.connection.getConnectionId();
+  }
+
+  // ========== BROADCAST DE MOVIMIENTOS ==========
+
+  /**
+   * NUEVO: Retransmite un movimiento al otro jugador
+   * NO espera validación del servidor
+   */
+  async broadcastMove(position: number): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
     }
@@ -37,69 +63,81 @@ export class GameUseCases implements IGameUseCases {
     }
 
     try {
-      console.log('📤 Enviando movimiento:', position);
-      await this.connection.invoke('MakeMove', position);
-      console.log('✅ Movimiento enviado');
+      console.log('📤 Retransmitiendo movimiento:', position);
+      await this.connection.invoke('BroadcastMove', position);
+      console.log('✅ Movimiento retransmitido');
     } catch (error: any) {
-      console.error('❌ Error al enviar movimiento:', error);
-      throw new Error(`Error al realizar movimiento: ${error.message}`);
+      console.error('❌ Error al retransmitir movimiento:', error);
+      throw new Error(`Error al retransmitir: ${error.message}`);
     }
   }
 
-  async resetGame(): Promise<void> {
+  /**
+   * NUEVO: Retransmite solicitud de reinicio
+   */
+  async broadcastReset(): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
     }
 
     try {
-      console.log('🔄 Reiniciando juego...');
-      await this.connection.invoke('ResetGame');
-      console.log('✅ Juego reiniciado');
+      console.log('🔄 Retransmitiendo reinicio...');
+      await this.connection.invoke('BroadcastReset');
+      console.log('✅ Reinicio retransmitido');
     } catch (error: any) {
-      console.error('❌ Error al reiniciar:', error);
-      throw new Error(`Error al reiniciar: ${error.message}`);
+      console.error('❌ Error al retransmitir reinicio:', error);
+      throw new Error(`Error al retransmitir reinicio: ${error.message}`);
     }
   }
 
-  async getGameState(): Promise<void> {
-    if (!this.connection.isConnected()) {
-      throw new Error('No hay conexión con el servidor');
-    }
+  // ========== LISTENERS PARA EVENTOS DEL SERVIDOR ==========
 
-    try {
-      console.log('📥 Solicitando estado del juego...');
-      await this.connection.invoke('GetGameState');
-      console.log('✅ Estado solicitado');
-    } catch (error: any) {
-      console.error('❌ Error al solicitar estado:', error);
-      throw new Error(`Error al obtener estado: ${error.message}`);
-    }
+  /**
+   * Escucha cuando otro jugador hace un movimiento
+   */
+  onMoveBroadcasted(callback: (data: { connectionId: string; position: number }) => void): void {
+    console.log('👂 Registrando listener para MoveBroadcasted...');
+    this.connection.on('MoveBroadcasted', callback);
   }
 
-  onGameStateUpdated(callback: (gameState: GameState) => void): void {
-    console.log('👂 Registrando listener para GameStateUpdated...');
-
-    this.connection.on('GameStateUpdated', (gameStateJSON: any) => {
-      console.log('📩 Estado del juego recibido (raw):', JSON.stringify(gameStateJSON));
-      
-      try {
-        const gameState = GameState.fromJSON(gameStateJSON);
-        console.log('✅ Estado parseado:', {
-          currentTurn: gameState.currentTurn,
-          winner: gameState.winner,
-          gameOver: gameState.gameOver,
-          waitingForPlayer: gameState.waitingForPlayer
-        });
-        callback(gameState);
-      } catch (error) {
-        console.error('❌ Error parseando estado:', error);
-      }
-    });
-
-    console.log('✅ Listener registrado');
+  /**
+   * Escucha cuando otro jugador solicita reinicio
+   */
+  onResetBroadcasted(callback: (data: { connectionId: string }) => void): void {
+    console.log('👂 Registrando listener para ResetBroadcasted...');
+    this.connection.on('ResetBroadcasted', callback);
   }
 
-  // ========== MÉTODOS PARA SALAS ==========
+  /**
+   * Escucha cuando un jugador se une
+   */
+  onPlayerJoined(callback: (data: { 
+    connectionId: string; 
+    symbol: string; 
+    playerName: string; 
+    playerCount: number 
+  }) => void): void {
+    console.log('👂 Registrando listener para PlayerJoined...');
+    this.connection.on('PlayerJoined', callback);
+  }
+
+  /**
+   * Escucha cuando el oponente se desconecta
+   */
+  onOpponentDisconnected(callback: () => void): void {
+    console.log('👂 Registrando listener para OpponentDisconnected...');
+    this.connection.on('OpponentDisconnected', callback);
+  }
+
+  /**
+   * Escucha cuando el oponente abandona la sala
+   */
+  onOpponentLeft(callback: () => void): void {
+    console.log('👂 Registrando listener para OpponentLeft...');
+    this.connection.on('OpponentLeft', callback);
+  }
+
+  // ========== GESTIÓN DE SALAS ==========
 
   async createRoom(roomName: string): Promise<void> {
     if (!this.connection.isConnected()) {
@@ -131,7 +169,6 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  // ✅ NUEVO: Método para salir de una sala
   async leaveRoom(): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
@@ -164,35 +201,13 @@ export class GameUseCases implements IGameUseCases {
 
   onRoomListUpdated(callback: (rooms: Room[]) => void): void {
     console.log('👂 Registrando listener para RoomListUpdated...');
-
     this.connection.on('RoomListUpdated', (roomsJSON: any[]) => {
-      console.log('📩 Lista de salas recibida:', roomsJSON);
-      
       try {
         const rooms = roomsJSON.map(json => Room.fromJSON(json));
-        console.log('✅ Salas parseadas:', rooms.length);
         callback(rooms);
       } catch (error) {
         console.error('❌ Error parseando salas:', error);
       }
     });
-
-    console.log('✅ Listener de salas registrado');
-  }
-
-  // ========== FIN MÉTODOS PARA SALAS ==========
-
-  async disconnect(): Promise<void> {
-    console.log('🔌 Desconectando...');
-    await this.connection.stop();
-    console.log('✅ Desconectado');
-  }
-
-  isConnected(): boolean {
-    return this.connection.isConnected();
-  }
-
-  getConnectionId(): string | null {
-    return this.connection.getConnectionId();
   }
 }

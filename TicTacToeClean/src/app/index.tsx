@@ -1,10 +1,14 @@
+/**
+ * APP PRINCIPAL
+ * ✅ MEJORADO: Cada instancia tiene su propio contenedor
+ */
 import 'reflect-metadata';
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { runInAction } from 'mobx';
-import { container, setupDependencies } from '../core/container';
+import { createContainer, getGameViewModel } from '../core/container';
 import { TYPES } from '../core/types';
 import type { GameViewModel } from '../UI/viewmodels/GameViewModel';
 import type { AppConfig } from '../core/types';
@@ -12,20 +16,35 @@ import RoomListScreen from '../UI/screens/RoomListScreen';
 import CreateRoomScreen from '../UI/screens/CreateRoomScreen';
 import GameScreen from '../UI/screens/GameScreen';
 
-// Cambia esta URL según tu configuración
+// ✅ Cambia esta URL según tu configuración
 const HUB_URL = "http://localhost:5251/gameHub";
 
-const appConfig: AppConfig = { hubUrl: HUB_URL, autoReconnect: true, logLevel: 'debug' };
-setupDependencies(appConfig);
+const appConfig: AppConfig = { 
+  hubUrl: HUB_URL, 
+  autoReconnect: true, 
+  logLevel: 'debug' 
+};
 
 const App = observer(() => {
   const [screen, setScreen] = useState<'roomList' | 'game'>('roomList');
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
-  const viewModel = container.get<GameViewModel>(TYPES.GameViewModel);
+
+  // ✅ NUEVO: Crear contenedor único para esta instancia de App
+  const [container] = useState(() => {
+    console.log('🎮 Creando contenedor para esta instancia de App...');
+    return createContainer(appConfig);
+  });
+
+  // ✅ NUEVO: Obtener ViewModel del contenedor de esta instancia
+  const [viewModel] = useState(() => {
+    console.log('🎮 Obteniendo ViewModel del contenedor...');
+    return getGameViewModel(container);
+  });
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log('🚀 Inicializando App con contenedor único...');
         await viewModel.initialize();
         console.log('✅ App inicializada correctamente');
       } catch (error: any) {
@@ -39,7 +58,13 @@ const App = observer(() => {
     };
 
     initializeApp();
-  }, []);
+
+    // Cleanup cuando el componente se desmonte
+    return () => {
+      console.log('🧹 Limpiando conexión...');
+      viewModel.disconnect().catch(err => console.error('Error en cleanup:', err));
+    };
+  }, [viewModel]);
 
   const handleCreateRoom = () => {
     runInAction(() => viewModel.showCreateRoomModal = true);
@@ -84,15 +109,12 @@ const App = observer(() => {
     }
   };
 
-  // ✅ MODIFICADO: Ahora llama a leaveRoom() para notificar al servidor
   const handleLeaveGame = async () => {
     try {
       console.log('🚪 Usuario saliendo de la sala...');
       
-      // Notificar al servidor que estamos saliendo
       await viewModel.leaveRoom();
       
-      // Volver a la lista de salas
       setScreen('roomList');
       setCurrentRoomId(null);
       
@@ -100,7 +122,6 @@ const App = observer(() => {
     } catch (error: any) {
       console.error('❌ Error al abandonar sala:', error);
       
-      // Aun si hay error, volver a la lista
       setScreen('roomList');
       setCurrentRoomId(null);
       

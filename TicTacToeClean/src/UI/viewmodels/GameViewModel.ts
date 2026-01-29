@@ -1,6 +1,12 @@
+/**
+ * APPLICATION LAYER - GameViewModel
+ * ViewModel principal que gestiona el estado del juego
+ * Implementa el patrón MVVM con MobX
+ */
 import { injectable, inject } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 import { GameState } from '../../domain/entities/GameState';
+import { Player } from '../../domain/entities/Player';
 import { Room } from '../../domain/entities/Room';
 import { IGameUseCases } from '../../domain/interfaces/IGameUseCases';
 import { TYPES } from '../../core/types';
@@ -9,11 +15,15 @@ export type PlayerSymbol = 'X' | 'O' | null;
 
 @injectable()
 export class GameViewModel {
+  // Estado del juego
   gameState: GameState = new GameState();
+  
+  // Estado de conexión
   isConnected = false;
-  errorMessage = '';
-
   connectionId: string | null = null;
+  errorMessage = '';
+  
+  // Estado de salas
   rooms: Room[] = [];
   showCreateRoomModal = false;
   isLoadingRooms = false;
@@ -27,10 +37,13 @@ export class GameViewModel {
     console.log('🎮 GameViewModel inicializado');
   }
 
+  // ========== INICIALIZACIÓN ==========
+
   async initialize(): Promise<void> {
     try {
       console.log('🚀 Inicializando ViewModel...');
       
+      // Inicializar conexión
       await this.gameUseCases.initializeConnection();
 
       runInAction(() => {
@@ -44,15 +57,78 @@ export class GameViewModel {
         connectionId: this.connectionId
       });
 
-      this.gameUseCases.onGameStateUpdated((state) => {
-        console.log('📩 Estado del juego actualizado:', {
-          currentTurn: state.currentTurn,
-          gameOver: state.gameOver,
-          winner: state.winner
+      // ========== REGISTRAR LISTENERS ==========
+
+      // Cuando un jugador se une
+      this.gameUseCases.onPlayerJoined((data) => {
+        console.log('📩 Jugador unido:', data);
+        runInAction(() => {
+          const player = new Player(data.connectionId, data.symbol, data.playerName);
+          
+          if (data.symbol === 'X') {
+            this.gameState.playerX = player;
+          } else {
+            this.gameState.playerO = player;
+          }
+
+          console.log('✅ Estado actualizado:', {
+            playerX: this.gameState.playerX?.name,
+            playerO: this.gameState.playerO?.name,
+            waitingForPlayer: this.gameState.waitingForPlayer
+          });
         });
-        runInAction(() => this.gameState = state);
       });
 
+      // Cuando otro jugador hace un movimiento
+      this.gameUseCases.onMoveBroadcasted((data) => {
+        console.log('📩 Movimiento recibido:', data);
+        
+        // Si el movimiento es mío, no hacer nada (ya actualicé localmente)
+        if (data.connectionId === this.connectionId) {
+          console.log('ℹ️ Movimiento propio ignorado');
+          return;
+        }
+
+        // Aplicar el movimiento del oponente
+        runInAction(() => {
+          const opponentSymbol = this.getOpponentSymbol();
+          if (opponentSymbol) {
+            const success = this.gameState.makeMove(data.position, opponentSymbol);
+            if (success) {
+              console.log('✅ Movimiento del oponente aplicado');
+            }
+          }
+        });
+      });
+
+      // Cuando otro jugador solicita reinicio
+      this.gameUseCases.onResetBroadcasted((data) => {
+        console.log('📩 Reinicio recibido:', data);
+        runInAction(() => {
+          this.gameState.reset();
+          console.log('✅ Juego reiniciado');
+        });
+      });
+
+      // Cuando el oponente se desconecta
+      this.gameUseCases.onOpponentDisconnected(() => {
+        console.log('📩 Oponente desconectado');
+        runInAction(() => {
+          this.gameState = new GameState();
+          this.errorMessage = 'Tu oponente se desconectó';
+        });
+      });
+
+      // Cuando el oponente abandona la sala
+      this.gameUseCases.onOpponentLeft(() => {
+        console.log('📩 Oponente abandonó la sala');
+        runInAction(() => {
+          this.gameState = new GameState();
+          this.errorMessage = 'Tu oponente abandonó la sala';
+        });
+      });
+
+      // Actualizar lista de salas
       this.gameUseCases.onRoomListUpdated((rooms) => {
         console.log('📩 Lista de salas actualizada:', rooms.length, 'salas');
         runInAction(() => {
@@ -61,6 +137,7 @@ export class GameViewModel {
         });
       });
 
+      // Solicitar lista inicial de salas
       await this.refreshRooms();
       
       console.log('✅ ViewModel inicializado completamente');
@@ -74,6 +151,11 @@ export class GameViewModel {
     }
   }
 
+  // ========== GETTERS ==========
+
+  /**
+   * Obtiene el símbolo del jugador actual
+   */
   get mySymbol(): PlayerSymbol {
     if (!this.connectionId) return null;
     if (this.gameState.playerX?.connectionId === this.connectionId) return 'X';
@@ -81,6 +163,9 @@ export class GameViewModel {
     return null;
   }
 
+  /**
+   * Verifica si es el turno del jugador actual
+   */
   get isMyTurn(): boolean {
     if (!this.mySymbol || this.gameState.gameOver || this.gameState.waitingForPlayer) {
       return false;
@@ -88,10 +173,16 @@ export class GameViewModel {
     return this.gameState.currentTurn === this.mySymbol;
   }
 
+  /**
+   * Verifica si estamos esperando al oponente
+   */
   get isWaitingForOpponent(): boolean {
     return this.gameState.waitingForPlayer;
   }
 
+  /**
+   * Obtiene el estado actual del juego en formato legible
+   */
   get gameStatus(): string {
     if (this.gameState.gameOver) {
       if (this.gameState.winner === 'draw') return '¡Empate!';
@@ -103,6 +194,23 @@ export class GameViewModel {
     return 'Turno del rival';
   }
 
+  /**
+   * Obtiene el símbolo del oponente
+   */
+  private getOpponentSymbol(): PlayerSymbol {
+    if (this.mySymbol === 'X') return 'O';
+    if (this.mySymbol === 'O') return 'X';
+    return null;
+  }
+
+  // ========== ACCIONES DEL JUEGO ==========
+
+  /**
+   * Maneja el clic en una celda del tablero
+   * ✅ NUEVA LÓGICA:
+   * 1. Validar y aplicar el movimiento localmente
+   * 2. Retransmitir al servidor (que lo enviará al oponente)
+   */
   async handleCellPress(position: number): Promise<void> {
     if (!this.isMyTurn) {
       console.warn('⚠️ No es tu turno');
@@ -114,9 +222,24 @@ export class GameViewModel {
       return;
     }
 
+    if (!this.mySymbol) {
+      console.warn('⚠️ No tienes símbolo asignado');
+      return;
+    }
+
     try {
-      console.log('📤 Enviando movimiento:', position);
-      await this.gameUseCases.makeMove(position);
+      // 1️⃣ Aplicar movimiento LOCALMENTE
+      const success = this.gameState.makeMove(position, this.mySymbol);
+      
+      if (!success) {
+        console.warn('⚠️ Movimiento inválido');
+        return;
+      }
+
+      // 2️⃣ Retransmitir al servidor (para el oponente)
+      await this.gameUseCases.broadcastMove(position);
+      console.log('✅ Movimiento aplicado y retransmitido');
+
     } catch (error: any) {
       console.error('❌ Error al hacer movimiento:', error);
       runInAction(() => this.errorMessage = error.message);
@@ -124,6 +247,12 @@ export class GameViewModel {
     }
   }
 
+  /**
+   * Reinicia el juego
+   * ✅ NUEVA LÓGICA:
+   * 1. Reiniciar localmente
+   * 2. Retransmitir al servidor
+   */
   async resetGame(): Promise<void> {
     if (!this.isConnected) {
       console.warn('⚠️ No conectado al servidor');
@@ -131,8 +260,15 @@ export class GameViewModel {
     }
 
     try {
-      console.log('🔄 Reiniciando juego...');
-      await this.gameUseCases.resetGame();
+      // 1️⃣ Reiniciar LOCALMENTE
+      runInAction(() => {
+        this.gameState.reset();
+      });
+
+      // 2️⃣ Retransmitir al servidor
+      await this.gameUseCases.broadcastReset();
+      console.log('✅ Juego reiniciado y retransmitido');
+
     } catch (error: any) {
       console.error('❌ Error al reiniciar:', error);
       runInAction(() => this.errorMessage = error.message);
@@ -140,6 +276,11 @@ export class GameViewModel {
     }
   }
 
+  // ========== GESTIÓN DE SALAS ==========
+
+  /**
+   * Crea una nueva sala
+   */
   async createRoom(roomName: string): Promise<void> {
     if (!this.isConnected) {
       throw new Error('No hay conexión con el servidor');
@@ -164,6 +305,9 @@ export class GameViewModel {
     }
   }
 
+  /**
+   * Se une a una sala existente
+   */
   async joinRoom(roomId: string, playerName: string = 'Jugador'): Promise<void> {
     if (!this.isConnected) {
       throw new Error('No hay conexión con el servidor');
@@ -171,12 +315,14 @@ export class GameViewModel {
 
     try {
       console.log('🚪 Uniéndose a sala:', roomId);
-      await this.gameUseCases.joinRoom(roomId, playerName);
       
+      // Limpiar estado anterior
       runInAction(() => {
+        this.gameState = new GameState();
         this.currentRoomId = roomId;
       });
-      
+
+      await this.gameUseCases.joinRoom(roomId, playerName);
       console.log('✅ Unido a sala exitosamente');
     } catch (error: any) {
       console.error('❌ Error al unirse a sala:', error);
@@ -184,7 +330,9 @@ export class GameViewModel {
     }
   }
 
-  // ✅ NUEVO: Método para salir de una sala
+  /**
+   * Sale de la sala actual
+   */
   async leaveRoom(): Promise<void> {
     if (!this.isConnected) {
       console.warn('⚠️ No conectado al servidor');
@@ -194,18 +342,14 @@ export class GameViewModel {
     try {
       console.log('🚪 Saliendo de la sala...');
       
-      // Llamar al backend para notificar que salimos
       await this.gameUseCases.leaveRoom();
       
-      // Limpiar estado local
       runInAction(() => {
         this.currentRoomId = null;
         this.gameState = new GameState();
       });
       
-      // Actualizar lista de salas
       await this.refreshRooms();
-      
       console.log('✅ Salió de la sala exitosamente');
     } catch (error: any) {
       console.error('❌ Error al salir de la sala:', error);
@@ -214,6 +358,9 @@ export class GameViewModel {
     }
   }
 
+  /**
+   * Actualiza la lista de salas
+   */
   async refreshRooms(): Promise<void> {
     if (!this.isConnected) {
       console.warn('⚠️ No conectado al servidor');
@@ -238,6 +385,9 @@ export class GameViewModel {
     }
   }
 
+  /**
+   * Desconecta del servidor
+   */
   async disconnect(): Promise<void> {
     try {
       console.log('🔌 Desconectando...');
@@ -258,6 +408,9 @@ export class GameViewModel {
     }
   }
 
+  /**
+   * Imprime el estado actual en la consola (para debugging)
+   */
   logState(): void {
     console.log('📊 Estado actual del ViewModel:', {
       isConnected: this.isConnected,
