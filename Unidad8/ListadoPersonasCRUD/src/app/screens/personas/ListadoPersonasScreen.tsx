@@ -109,7 +109,6 @@ const ListadoPersonasScreen = observer(function ListadoPersonasScreen() {
         </Text>
       </View>
 
-      {/* Barra de búsqueda */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           <Text style={styles.searchIcon}>🔍</Text>

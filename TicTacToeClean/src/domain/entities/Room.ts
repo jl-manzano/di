@@ -24,6 +24,7 @@ export class Room {
 
   static fromJSON(json: any): Room {
     if (!json) return new Room();
+    
     return new Room(
       json.roomId || '',
       json.roomName || '',

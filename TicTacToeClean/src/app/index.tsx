@@ -1,7 +1,3 @@
-/**
- * APP PRINCIPAL
- * ✅ MEJORADO: Cada instancia tiene su propio contenedor
- */
 import 'reflect-metadata';
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
@@ -9,14 +5,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { runInAction } from 'mobx';
 import { createContainer, getGameViewModel } from '../core/container';
-import { TYPES } from '../core/types';
-import type { GameViewModel } from '../UI/viewmodels/GameViewModel';
 import type { AppConfig } from '../core/types';
 import RoomListScreen from '../UI/screens/RoomListScreen';
 import CreateRoomScreen from '../UI/screens/CreateRoomScreen';
 import GameScreen from '../UI/screens/GameScreen';
 
-// ✅ Cambia esta URL según tu configuración
 const HUB_URL = "http://localhost:5251/gameHub";
 
 const appConfig: AppConfig = { 
@@ -29,13 +22,11 @@ const App = observer(() => {
   const [screen, setScreen] = useState<'roomList' | 'game'>('roomList');
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
 
-  // ✅ NUEVO: Crear contenedor único para esta instancia de App
   const [container] = useState(() => {
     console.log('🎮 Creando contenedor para esta instancia de App...');
     return createContainer(appConfig);
   });
 
-  // ✅ NUEVO: Obtener ViewModel del contenedor de esta instancia
   const [viewModel] = useState(() => {
     console.log('🎮 Obteniendo ViewModel del contenedor...');
     return getGameViewModel(container);
@@ -59,7 +50,6 @@ const App = observer(() => {
 
     initializeApp();
 
-    // Cleanup cuando el componente se desmonte
     return () => {
       console.log('🧹 Limpiando conexión...');
       viewModel.disconnect().catch(err => console.error('Error en cleanup:', err));

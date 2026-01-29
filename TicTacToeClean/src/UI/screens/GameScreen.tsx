@@ -17,12 +17,8 @@ interface GameScreenProps {
 }
 
 const { width } = Dimensions.get('window');
-
-// ✅ AJUSTADO: Tablero que se adapta a la pantalla
-// En móvil: usa el 90% del ancho
-// En web: máximo 400px para que sea cómodo
 const BOARD_SIZE = Math.min(width * 0.9, 400);
-const CELL_SIZE = (BOARD_SIZE - 32) / 3; // 32 = padding + margins
+const CELL_SIZE = (BOARD_SIZE - 32) / 3;
 
 const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
   const handleCellPress = (position: number) => {

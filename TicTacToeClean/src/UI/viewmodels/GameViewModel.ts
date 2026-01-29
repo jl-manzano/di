@@ -1,8 +1,3 @@
-/**
- * APPLICATION LAYER - GameViewModel
- * ViewModel principal que gestiona el estado del juego
- * Implementa el patrón MVVM con MobX
- */
 import { injectable, inject } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 import { GameState } from '../../domain/entities/GameState';
@@ -207,7 +202,6 @@ export class GameViewModel {
 
   /**
    * Maneja el clic en una celda del tablero
-   * ✅ NUEVA LÓGICA:
    * 1. Validar y aplicar el movimiento localmente
    * 2. Retransmitir al servidor (que lo enviará al oponente)
    */
@@ -228,7 +222,7 @@ export class GameViewModel {
     }
 
     try {
-      // 1️⃣ Aplicar movimiento LOCALMENTE
+      // Aplicar movimiento LOCALMENTE
       const success = this.gameState.makeMove(position, this.mySymbol);
       
       if (!success) {
@@ -236,7 +230,7 @@ export class GameViewModel {
         return;
       }
 
-      // 2️⃣ Retransmitir al servidor (para el oponente)
+      // Retransmitir al servidor (para el oponente)
       await this.gameUseCases.broadcastMove(position);
       console.log('✅ Movimiento aplicado y retransmitido');
 
@@ -249,9 +243,6 @@ export class GameViewModel {
 
   /**
    * Reinicia el juego
-   * ✅ NUEVA LÓGICA:
-   * 1. Reiniciar localmente
-   * 2. Retransmitir al servidor
    */
   async resetGame(): Promise<void> {
     if (!this.isConnected) {
@@ -260,12 +251,12 @@ export class GameViewModel {
     }
 
     try {
-      // 1️⃣ Reiniciar LOCALMENTE
+      // Reiniciar LOCALMENTE
       runInAction(() => {
         this.gameState.reset();
       });
 
-      // 2️⃣ Retransmitir al servidor
+      // Retransmitir al servidor
       await this.gameUseCases.broadcastReset();
       console.log('✅ Juego reiniciado y retransmitido');
 

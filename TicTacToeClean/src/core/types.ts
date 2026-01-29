@@ -1,8 +1,3 @@
-/**
- * CORE - Tipos y Símbolos para Inyección de Dependencias
- */
-
-// Configuración de la aplicación
 export interface AppConfig {
   hubUrl: string;
   autoReconnect: boolean;

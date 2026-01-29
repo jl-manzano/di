@@ -1,8 +1,3 @@
-/**
- * DOMAIN LAYER - Casos de Uso del Juego
- * Implementa la lógica de negocio usando broadcast (retransmisión)
- * NO espera validación del servidor
- */
 import { injectable, inject } from 'inversify';
 import { Room } from '../entities/Room';
 import { IGameUseCases } from '../interfaces/IGameUseCases';
@@ -48,11 +43,6 @@ export class GameUseCases implements IGameUseCases {
   }
 
   // ========== BROADCAST DE MOVIMIENTOS ==========
-
-  /**
-   * NUEVO: Retransmite un movimiento al otro jugador
-   * NO espera validación del servidor
-   */
   async broadcastMove(position: number): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
@@ -72,9 +62,6 @@ export class GameUseCases implements IGameUseCases {
     }
   }
 
-  /**
-   * NUEVO: Retransmite solicitud de reinicio
-   */
   async broadcastReset(): Promise<void> {
     if (!this.connection.isConnected()) {
       throw new Error('No hay conexión con el servidor');
@@ -89,8 +76,6 @@ export class GameUseCases implements IGameUseCases {
       throw new Error(`Error al retransmitir reinicio: ${error.message}`);
     }
   }
-
-  // ========== LISTENERS PARA EVENTOS DEL SERVIDOR ==========
 
   /**
    * Escucha cuando otro jugador hace un movimiento

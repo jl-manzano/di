@@ -1,6 +1,3 @@
-/**
- * DOMAIN LAYER - Entidad Player
- */
 export class Player {
   connectionId: string;
   symbol: string; // "X" o "O"

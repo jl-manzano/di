@@ -1,13 +1,3 @@
-/**
- * DOMAIN LAYER - Entidad GameState
- * ✅ TODA LA LÓGICA DEL JUEGO ESTÁ AQUÍ (cliente)
- * 
- * Este archivo contiene:
- * - Validación de movimientos
- * - Verificación de ganadores
- * - Cambio de turnos
- * - Detección de empates
- */
 import { makeObservable, observable, action, computed } from 'mobx';
 import { Player } from './Player';
 

@@ -1,0 +1,156 @@
+TIC TAC TOE - CLEAN ARCHITECTURE + MVVM + SIGNALR 
+************ (ESTÁ TAN COMPLETO PORQUE YA SE LO HE PASADO A LA IA Y LO TENGO HECHO CON SALAS Y FUNCIONA) ************
+
+SERVIDOR (C# - ASP.NET Core)
+
+Entities/
+    Player.cs
+        + class Player
+            - ConnectionId, Symbol, Name: string { get; set; }
+            + Player()
+            + Player(connectionId, symbol, name)
+            + bool IsValid()
+
+    Room.cs
+        + class Room
+            - RoomId, RoomName: string { get; set; }
+            - PlayerX, PlayerO: Player? { get; set; }
+            - CreatedAt: DateTime { get; set; }
+            + Room()
+            + Room(roomId, roomName)
+            + int GetPlayerCount()
+            + bool IsFull()
+            + bool IsEmpty()
+
+
+CLIENTE (React Native - TypeScript)
+
+app/
+    App.tsx
+        - Estado: screen, currentRoomId, container, viewModel
+        -> maneja navegación entre RoomListScreen y GameScreen
+        -> funciones: handleCreateRoom, handleJoinRoom, handleLeaveGame, handleRefreshRooms
+
+core/
+    container.ts
+        + createContainer(config)
+        + getGameViewModel(container)
+        + getAppConfig(container)
+        + getGameUseCases(container)
+        + getSignalRConnection(container)
+        + clearContainer(container)
+    
+    types.ts
+        + interface AppConfig
+        + const TYPES
+
+data/
+    SignalRConnection.ts (@injectable)
+        + interface ISignalRConnection
+            + start(), stop(), invoke(methodName, ...args)
+            + on(eventName, callback), isConnected(), getConnectionId()
+        
+        + class SignalRConnection implements ISignalRConnection
+            - connection: HubConnection | null
+            - hubUrl: string
+            + constructor(@inject(TYPES.HubUrl) hubUrl)
+            + async start()
+            + async stop()
+            + async invoke(methodName, ...args)
+            + on(eventName, callback)
+            + isConnected()
+            + getConnectionId()
+
+domain/
+    entities/
+        GameState.ts
+            + class GameState
+                - board, currentTurn, winner, gameOver (observable)
+                - playerX, playerO (observable)
+                + get waitingForPlayer (computed)
+                + makeMove(position, symbol) (action)
+                + reset() (action)
+                + isBoardFull(), isCellEmpty(position), getCellValue(position)
+                + static fromJSON(json), toJSON()
+        
+        Player.ts
+            + class Player
+                - connectionId, symbol, name
+                + constructor(connectionId, symbol, name)
+                + static fromJSON(json)
+                + toJSON()
+                + isValid()
+        
+        Room.ts
+            + class Room
+                - roomId, roomName, playerCount, maxPlayers, isFull, createdAt
+                + constructor(roomId?, roomName?, playerCount?, ...)
+                + static fromJSON(json)
+                + toJSON()
+                + getPlayerCountText()
+                + canJoin()
+    
+    interfaces/
+        IGameUseCases.ts
+            + interface IGameUseCases
+                + initializeConnection(), disconnect(), isConnected(), getConnectionId()
+                + broadcastMove(position), broadcastReset()
+                + onMoveBroadcasted(callback), onResetBroadcasted(callback)
+                + onPlayerJoined(callback), onOpponentDisconnected(callback), onOpponentLeft(callback)
+                + createRoom(roomName), joinRoom(roomId, playerName?), leaveRoom()
+                + getRoomList(), onRoomListUpdated(callback)
+    
+    usecases/
+        GameUseCases.ts (@injectable)
+            + class GameUseCases implements IGameUseCases
+                - connection: ISignalRConnection
+                + constructor(@inject(TYPES.ISignalRConnection) connection)
+                + async initializeConnection() -> connection.start()
+                + async disconnect() -> connection.stop()
+                + isConnected() -> connection.isConnected()
+                + getConnectionId() -> connection.getConnectionId()
+                + async broadcastMove(position) -> connection.invoke('BroadcastMove')
+                + async broadcastReset() -> connection.invoke('BroadcastReset')
+                + onMoveBroadcasted(callback) -> connection.on('MoveBroadcasted')
+                + onResetBroadcasted(callback) -> connection.on('ResetBroadcasted')
+                + onPlayerJoined(callback) -> connection.on('PlayerJoined')
+                + onOpponentDisconnected(callback) -> connection.on('OpponentDisconnected')
+                + onOpponentLeft(callback) -> connection.on('OpponentLeft')
+                + async createRoom(roomName) -> connection.invoke('CreateRoom')
+                + async joinRoom(roomId, playerName) -> connection.invoke('JoinRoom')
+                + async leaveRoom() -> connection.invoke('LeaveRoom')
+                + async getRoomList() -> connection.invoke('GetRoomList')
+                + onRoomListUpdated(callback) -> connection.on('RoomListUpdated')
+
+UI/
+    screens/
+        RoomListScreen.tsx (observer)
+            -> muestra lista de salas disponibles con animaciones
+            -> botones: crear sala y refrescar
+        
+        CreateRoomScreen.tsx
+            -> para crear nueva sala con input de nombre
+        
+        GameScreen.tsx (observer)
+            -> tablero 3x3 interactivo para jugar
+            -> muestra estado del juego y turno actual
+    
+    viewmodels/
+        GameViewModel.ts (@injectable, MobX)
+            + class GameViewModel
+                - gameState, isConnected, connectionId, errorMessage (observable)
+                - rooms, showCreateRoomModal, isLoadingRooms, currentRoomId (observable)
+                - gameUseCases: IGameUseCases
+                + constructor(@inject(TYPES.IGameUseCases) gameUseCases)
+                + async initialize()
+                + get mySymbol (computed)
+                + get isMyTurn (computed)
+                + get isWaitingForOpponent (computed)
+                + get gameStatus (computed)
+                + async handleCellPress(position)
+                + async resetGame()
+                + async createRoom(roomName)
+                + async joinRoom(roomId, playerName?)
+                + async leaveRoom()
+                + async refreshRooms()
+                + async disconnect()

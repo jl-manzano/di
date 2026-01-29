@@ -1,12 +1,6 @@
-/**
- * DOMAIN LAYER - Interfaz de casos de uso
- * Define las operaciones disponibles para el juego
- */
 import { Room } from '../entities/Room';
 
 export interface IGameUseCases {
-  // ========== CONEXIÓN ==========
-  
   /**
    * Inicializa la conexión con el servidor
    */

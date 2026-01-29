@@ -22,21 +22,37 @@ export class SignalRConnection implements ISignalRConnection {
   }
 
   async start(): Promise<void> {
-    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) return;
+    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      console.log('ℹ️ Ya hay una conexión activa');
+      return;
+    }
 
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(this.hubUrl, { transport: signalR.HttpTransportType.WebSockets })
+      .withUrl(this.hubUrl, { 
+        transport: signalR.HttpTransportType.WebSockets 
+      })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .configureLogging(signalR.LogLevel.Debug)
       .build();
 
-    this.connection.onreconnecting((err) => console.warn('🔄 Reconectando...', err?.message || ''));
-    this.connection.onreconnected((connectionId) => console.log('✅ Reconectado. Connection ID:', connectionId));
-    this.connection.onclose((err) => console.error('🔴 Conexión cerrada:', err?.message || ''));
+    this.connection.onreconnecting((err) => {
+      console.warn('🔄 Reconectando...', err?.message || '');
+    });
+
+    this.connection.onreconnected((connectionId) => {
+      console.log('✅ Reconectado. Connection ID:', connectionId);
+    });
+
+    this.connection.onclose((err) => {
+      console.error('🔴 Conexión cerrada:', err?.message || '');
+    });
 
     try {
       await this.connection.start();
-      console.log('✅ Conexión SignalR establecida', { state: this.connection.state, connectionId: this.connection.connectionId });
+      console.log('✅ Conexión SignalR establecida', {
+        state: this.connection.state,
+        connectionId: this.connection.connectionId
+      });
     } catch (error: any) {
       console.error('❌ Error al conectar SignalR:', error.message);
       throw new Error(`No se pudo conectar: ${error.message}`);
@@ -52,8 +68,9 @@ export class SignalRConnection implements ISignalRConnection {
   }
 
   async invoke(methodName: string, ...args: any[]): Promise<void> {
-    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected)
+    if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
       throw new Error('No hay conexión activa con el servidor');
+    }
 
     try {
       await this.connection.invoke(methodName, ...args);
@@ -63,8 +80,13 @@ export class SignalRConnection implements ISignalRConnection {
   }
 
   on(eventName: string, callback: (...args: any[]) => void): void {
-    if (!this.connection) throw new Error('La conexión no ha sido inicializada');
-    this.connection.on(eventName, (...args) => callback(...args));
+    if (!this.connection) {
+      throw new Error('La conexión no ha sido inicializada');
+    }
+
+    this.connection.on(eventName, (...args) => {
+      callback(...args);
+    });
   }
 
   isConnected(): boolean {
