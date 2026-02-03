@@ -1,28 +1,42 @@
 import { useState } from 'react';
 import {
-  View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Modal,
-  KeyboardAvoidingView,
-  Platform
+  View,
 } from 'react-native';
 
 interface CreateRoomScreenProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: (roomName: string) => void;
+  onCreate: (roomName: string) => void | Promise<void>;
 }
 
 const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps) => {
   const [roomName, setRoomName] = useState('');
 
-  const handleCreate = () => {
-    if (roomName.trim()) {
-      onCreate(roomName.trim());
+  const handleCreate = async () => {
+    const trimmed = roomName.trim();
+
+    if (trimmed.length < 3) {
+      Alert.alert(
+        'Nombre demasiado corto',
+        'El nombre de la sala debe tener al menos 3 caracteres.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    try {
+      await onCreate(trimmed);
+
       setRoomName('');
+    } catch {
     }
   };
 
@@ -31,31 +45,19 @@ const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps)
     onClose();
   };
 
+  const isValid = roomName.trim().length >= 3;
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleCancel}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.overlay}
       >
-        <TouchableOpacity
-          style={styles.backdrop}
-          activeOpacity={1}
-          onPress={handleCancel}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-          >
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleCancel}>
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modal}>
               <Text style={styles.title}>Crear Nueva Sala</Text>
-              <Text style={styles.subtitle}>
-                Elige un nombre para tu sala de juego
-              </Text>
+              <Text style={styles.subtitle}>Elige un nombre para tu sala de juego</Text>
 
               <TextInput
                 style={styles.input}
@@ -67,6 +69,8 @@ const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps)
                 autoFocus
               />
 
+              <Text style={styles.hint}>Mínimo 3 caracteres.</Text>
+
               <View style={styles.actions}>
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
@@ -76,9 +80,13 @@ const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps)
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.button, styles.createButton]}
+                  style={[
+                    styles.button,
+                    styles.createButton,
+                    !isValid && styles.createButtonDisabled
+                  ]}
                   onPress={handleCreate}
-                  disabled={!roomName.trim()}
+                  disabled={!isValid}
                 >
                   <Text style={styles.createButtonText}>Crear</Text>
                 </TouchableOpacity>
@@ -92,11 +100,7 @@ const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps)
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   backdrop: {
     flex: 1,
     width: '100%',
@@ -117,55 +121,31 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
+  title: { fontSize: 24, fontWeight: '700', color: '#1e293b', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 14, color: '#64748b', marginBottom: 20, textAlign: 'center' },
   input: {
     backgroundColor: '#f1f5f9',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     color: '#1e293b',
-    marginBottom: 20,
+    marginBottom: 8,
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#e2e8f0',
-  },
-  cancelButtonText: {
+  hint: {
     color: '#64748b',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 12,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  createButton: {
-    backgroundColor: '#6366f1',
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  actions: { flexDirection: 'row', gap: 12 },
+  button: { flex: 1, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  cancelButton: { backgroundColor: '#e2e8f0' },
+  cancelButtonText: { color: '#64748b', fontSize: 16, fontWeight: '600' },
+  createButton: { backgroundColor: '#6366f1' },
+  createButtonDisabled: { opacity: 0.6 },
+  createButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 
 export default CreateRoomScreen;

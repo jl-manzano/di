@@ -1,71 +1,65 @@
-import 'reflect-metadata';
 import { Container } from 'inversify';
-import { ISignalRConnection, SignalRConnection } from '../data/SignalRConnection';
+import 'reflect-metadata';
+import { AppConfig, TYPES } from './types';
+
+// Shared SignalR connection
+import { SignalRConnection } from '../data/SignalRConnection';
+
+// Repositories
+import { SignalRGameRepository } from '../data/SignalRGameRepository';
+import { SignalRRoomRepository } from '../data/SignalRRoomRepository';
+import { IGameRepository } from '../domain/interfaces/IGameRepository';
+import { IRoomRepository } from '../domain/interfaces/IRoomRepository';
+
+// UseCases
 import { IGameUseCases } from '../domain/interfaces/IGameUseCases';
 import { GameUseCases } from '../domain/usecases/GameUseCases';
+
+// ViewModels
 import { GameViewModel } from '../UI/viewmodels/GameViewModel';
-import { AppConfig, TYPES } from './types';
 
 export function createContainer(config: AppConfig): Container {
   const container = new Container();
-  
-  console.log('🔧 Creando nuevo contenedor de dependencias...');
-  console.log(`   Hub URL: ${config.hubUrl}`);
-  console.log(`   Auto Reconnect: ${config.autoReconnect}`);
-  console.log(`   Log Level: ${config.logLevel}`);
 
+  // CONFIG
   container.bind<AppConfig>(TYPES.AppConfig).toConstantValue(config);
   container.bind<string>(TYPES.HubUrl).toConstantValue(config.hubUrl);
 
-  container.bind<ISignalRConnection>(TYPES.ISignalRConnection)
+  // Shared SignalR connection (SINGLETON)
+  container.bind<SignalRConnection>(TYPES.SignalRConnection)
     .to(SignalRConnection)
     .inSingletonScope();
 
+  // REPOSITORIES (SINGLETON)
+  container.bind<IGameRepository>(TYPES.IGameRepository)
+    .to(SignalRGameRepository)
+    .inSingletonScope();
+
+  container.bind<IRoomRepository>(TYPES.IRoomRepository)
+    .to(SignalRRoomRepository)
+    .inSingletonScope();
+
+  // USE CASES
   container.bind<IGameUseCases>(TYPES.IGameUseCases)
     .to(GameUseCases)
     .inSingletonScope();
 
+  // VIEWMODEL
   container.bind<GameViewModel>(TYPES.GameViewModel)
     .to(GameViewModel)
     .inSingletonScope();
 
-  console.log('✅ Contenedor creado correctamente\n');
-  
   return container;
 }
 
-/**
- * Helper para obtener el GameViewModel de un contenedor
- */
 export function getGameViewModel(container: Container): GameViewModel {
   return container.get<GameViewModel>(TYPES.GameViewModel);
 }
 
-/**
- * Helper para obtener la configuración de un contenedor
- */
 export function getAppConfig(container: Container): AppConfig {
   return container.get<AppConfig>(TYPES.AppConfig);
 }
 
-/**
- * Helper para obtener GameUseCases de un contenedor
- */
-export function getGameUseCases(container: Container): IGameUseCases {
-  return container.get<IGameUseCases>(TYPES.IGameUseCases);
-}
-
-/**
- * Helper para obtener la conexión SignalR de un contenedor
- */
-export function getSignalRConnection(container: Container): ISignalRConnection {
-  return container.get<ISignalRConnection>(TYPES.ISignalRConnection);
-}
-
-/**
- * Limpia un contenedor (útil para testing o cleanup)
- */
 export function clearContainer(container: Container): void {
   container.unbindAll();
-  console.log('🧹 Contenedor limpiado');
 }

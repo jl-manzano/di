@@ -1,416 +1,187 @@
-import { injectable, inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
+
+import { TYPES } from '../../core/types';
 import { GameState } from '../../domain/entities/GameState';
 import { Player } from '../../domain/entities/Player';
 import { Room } from '../../domain/entities/Room';
-import { IGameUseCases } from '../../domain/interfaces/IGameUseCases';
-import { TYPES } from '../../core/types';
 
-export type PlayerSymbol = 'X' | 'O' | null;
+import { IGameRepository } from '../../domain/interfaces/IGameRepository';
+import { IGameUseCases } from '../../domain/interfaces/IGameUseCases';
+import { IRoomRepository } from '../../domain/interfaces/IRoomRepository';
+
+type Unsub = () => void;
 
 @injectable()
 export class GameViewModel {
-  // Estado del juego
   gameState: GameState = new GameState();
-  
-  // Estado de conexión
-  isConnected = false;
-  connectionId: string | null = null;
-  errorMessage = '';
-  
-  // Estado de salas
   rooms: Room[] = [];
-  showCreateRoomModal = false;
+
+  isConnected = false;
   isLoadingRooms = false;
-  currentRoomId: string | null = null;
 
-  private gameUseCases: IGameUseCases;
+  showCreateRoomModal = false;
 
-  constructor(@inject(TYPES.IGameUseCases) gameUseCases: IGameUseCases) {
-    this.gameUseCases = gameUseCases;
-    makeAutoObservable(this);
-    console.log('🎮 GameViewModel inicializado');
+  mySymbol: string | null = null;
+
+  private unsubs: Unsub[] = [];
+
+  constructor(
+    @inject(TYPES.IGameRepository) private readonly gameRepo: IGameRepository,
+    @inject(TYPES.IRoomRepository) private readonly roomRepo: IRoomRepository,
+    @inject(TYPES.IGameUseCases) private readonly useCases: IGameUseCases
+  ) {
+    makeAutoObservable(this, {}, { autoBind: true });
   }
 
-  // ========== INICIALIZACIÓN ==========
+  get isMyTurn(): boolean {
+    return !!this.mySymbol && this.gameState.currentTurn === this.mySymbol;
+  }
 
   async initialize(): Promise<void> {
-    try {
-      console.log('🚀 Inicializando ViewModel...');
-      
-      // Inicializar conexión
-      await this.gameUseCases.initializeConnection();
+    this.showCreateRoomModal = false;
 
-      runInAction(() => {
-        this.isConnected = this.gameUseCases.isConnected();
-        this.connectionId = this.gameUseCases.getConnectionId();
-        this.errorMessage = '';
-      });
+    await this.connect();
 
-      console.log('✅ Conexión establecida:', {
-        connected: this.isConnected,
-        connectionId: this.connectionId
-      });
+    await this.refreshRooms();
+  }
 
-      // ========== REGISTRAR LISTENERS ==========
+  async connect(): Promise<void> {
+    await this.gameRepo.connect();
 
-      // Cuando un jugador se une
-      this.gameUseCases.onPlayerJoined((data) => {
-        console.log('📩 Jugador unido:', data);
+    runInAction(() => {
+      this.isConnected = this.gameRepo.isConnected();
+    });
+
+    this.clearSubscriptions();
+
+    this.unsubs.push(
+      this.gameRepo.onPlayerJoined((ev) => {
         runInAction(() => {
-          const player = new Player(data.connectionId, data.symbol, data.playerName);
-          
-          if (data.symbol === 'X') {
-            this.gameState.playerX = player;
-          } else {
-            this.gameState.playerO = player;
+          const myConnId = this.gameRepo.getConnectionId();
+          if (myConnId && ev.connectionId === myConnId) {
+            this.mySymbol = ev.symbol;
           }
 
-          console.log('✅ Estado actualizado:', {
-            playerX: this.gameState.playerX?.name,
-            playerO: this.gameState.playerO?.name,
-            waitingForPlayer: this.gameState.waitingForPlayer
+          const p = Player.fromJSON({
+            connectionId: ev.connectionId,
+            symbol: ev.symbol,
+            playerName: ev.playerName,
           });
+
+          if (ev.symbol === 'X') this.gameState.playerX = p;
+          if (ev.symbol === 'O') this.gameState.playerO = p;
         });
-      });
+      })
+    );
 
-      // Cuando otro jugador hace un movimiento
-      this.gameUseCases.onMoveBroadcasted((data) => {
-        console.log('📩 Movimiento recibido:', data);
-        
-        // Si el movimiento es mío, no hacer nada (ya actualicé localmente)
-        if (data.connectionId === this.connectionId) {
-          console.log('ℹ️ Movimiento propio ignorado');
-          return;
-        }
-
-        // Aplicar el movimiento del oponente
+    this.unsubs.push(
+      this.gameRepo.onMoveMade((ev) => {
         runInAction(() => {
-          const opponentSymbol = this.getOpponentSymbol();
-          if (opponentSymbol) {
-            const success = this.gameState.makeMove(data.position, opponentSymbol);
-            if (success) {
-              console.log('✅ Movimiento del oponente aplicado');
-            }
-          }
+          const symbolToApply = this.gameState.currentTurn;
+          this.gameState.makeMove(ev.position, symbolToApply);
         });
-      });
+      })
+    );
 
-      // Cuando otro jugador solicita reinicio
-      this.gameUseCases.onResetBroadcasted((data) => {
-        console.log('📩 Reinicio recibido:', data);
+    this.unsubs.push(
+      this.gameRepo.onGameReset(() => {
         runInAction(() => {
           this.gameState.reset();
-          console.log('✅ Juego reiniciado');
         });
-      });
+      })
+    );
 
-      // Cuando el oponente se desconecta
-      this.gameUseCases.onOpponentDisconnected(() => {
-        console.log('📩 Oponente desconectado');
+    this.unsubs.push(
+      this.gameRepo.onOpponentDisconnected(() => {
         runInAction(() => {
-          this.gameState = new GameState();
-          this.errorMessage = 'Tu oponente se desconectó';
+          this.dropOpponent();
+          this.gameState.reset();
         });
-      });
+      })
+    );
 
-      // Cuando el oponente abandona la sala
-      this.gameUseCases.onOpponentLeft(() => {
-        console.log('📩 Oponente abandonó la sala');
+    this.unsubs.push(
+      this.gameRepo.onOpponentLeft(() => {
         runInAction(() => {
-          this.gameState = new GameState();
-          this.errorMessage = 'Tu oponente abandonó la sala';
+          this.dropOpponent();
+          this.gameState.reset();
         });
-      });
+      })
+    );
 
-      // Actualizar lista de salas
-      this.gameUseCases.onRoomListUpdated((rooms) => {
-        console.log('📩 Lista de salas actualizada:', rooms.length, 'salas');
+    this.unsubs.push(
+      this.roomRepo.onRoomListUpdated((rooms) => {
         runInAction(() => {
           this.rooms = rooms;
           this.isLoadingRooms = false;
         });
-      });
-
-      // Solicitar lista inicial de salas
-      await this.refreshRooms();
-      
-      console.log('✅ ViewModel inicializado completamente');
-    } catch (error: any) {
-      console.error('❌ Error al inicializar ViewModel:', error);
-      runInAction(() => {
-        this.isConnected = false;
-        this.errorMessage = error.message;
-      });
-      throw error;
-    }
+      })
+    );
   }
 
-  // ========== GETTERS ==========
+  async disconnect(): Promise<void> {
+    this.clearSubscriptions();
 
-  /**
-   * Obtiene el símbolo del jugador actual
-   */
-  get mySymbol(): PlayerSymbol {
-    if (!this.connectionId) return null;
-    if (this.gameState.playerX?.connectionId === this.connectionId) return 'X';
-    if (this.gameState.playerO?.connectionId === this.connectionId) return 'O';
-    return null;
-  }
-
-  /**
-   * Verifica si es el turno del jugador actual
-   */
-  get isMyTurn(): boolean {
-    if (!this.mySymbol || this.gameState.gameOver || this.gameState.waitingForPlayer) {
-      return false;
-    }
-    return this.gameState.currentTurn === this.mySymbol;
-  }
-
-  /**
-   * Verifica si estamos esperando al oponente
-   */
-  get isWaitingForOpponent(): boolean {
-    return this.gameState.waitingForPlayer;
-  }
-
-  /**
-   * Obtiene el estado actual del juego en formato legible
-   */
-  get gameStatus(): string {
-    if (this.gameState.gameOver) {
-      if (this.gameState.winner === 'draw') return '¡Empate!';
-      if (this.gameState.winner === this.mySymbol) return '¡Ganaste!';
-      return 'Perdiste';
-    }
-    if (this.gameState.waitingForPlayer) return 'Esperando oponente...';
-    if (this.isMyTurn) return 'Tu turno';
-    return 'Turno del rival';
-  }
-
-  /**
-   * Obtiene el símbolo del oponente
-   */
-  private getOpponentSymbol(): PlayerSymbol {
-    if (this.mySymbol === 'X') return 'O';
-    if (this.mySymbol === 'O') return 'X';
-    return null;
-  }
-
-  // ========== ACCIONES DEL JUEGO ==========
-
-  /**
-   * Maneja el clic en una celda del tablero
-   * 1. Validar y aplicar el movimiento localmente
-   * 2. Retransmitir al servidor (que lo enviará al oponente)
-   */
-  async handleCellPress(position: number): Promise<void> {
-    if (!this.isMyTurn) {
-      console.warn('⚠️ No es tu turno');
-      return;
-    }
-
-    if (!this.gameState.isCellEmpty(position)) {
-      console.warn('⚠️ Celda ya ocupada');
-      return;
-    }
-
-    if (!this.mySymbol) {
-      console.warn('⚠️ No tienes símbolo asignado');
-      return;
-    }
-
-    try {
-      // Aplicar movimiento LOCALMENTE
-      const success = this.gameState.makeMove(position, this.mySymbol);
-      
-      if (!success) {
-        console.warn('⚠️ Movimiento inválido');
-        return;
-      }
-
-      // Retransmitir al servidor (para el oponente)
-      await this.gameUseCases.broadcastMove(position);
-      console.log('✅ Movimiento aplicado y retransmitido');
-
-    } catch (error: any) {
-      console.error('❌ Error al hacer movimiento:', error);
-      runInAction(() => this.errorMessage = error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Reinicia el juego
-   */
-  async resetGame(): Promise<void> {
-    if (!this.isConnected) {
-      console.warn('⚠️ No conectado al servidor');
-      return;
-    }
-
-    try {
-      // Reiniciar LOCALMENTE
-      runInAction(() => {
-        this.gameState.reset();
-      });
-
-      // Retransmitir al servidor
-      await this.gameUseCases.broadcastReset();
-      console.log('✅ Juego reiniciado y retransmitido');
-
-    } catch (error: any) {
-      console.error('❌ Error al reiniciar:', error);
-      runInAction(() => this.errorMessage = error.message);
-      throw error;
-    }
-  }
-
-  // ========== GESTIÓN DE SALAS ==========
-
-  /**
-   * Crea una nueva sala
-   */
-  async createRoom(roomName: string): Promise<void> {
-    if (!this.isConnected) {
-      throw new Error('No hay conexión con el servidor');
-    }
-
-    if (!roomName.trim()) {
-      throw new Error('El nombre de la sala no puede estar vacío');
-    }
-
-    try {
-      console.log('🏗️ Creando sala:', roomName);
-      await this.gameUseCases.createRoom(roomName.trim());
-      
-      runInAction(() => {
-        this.showCreateRoomModal = false;
-      });
-      
-      console.log('✅ Sala creada exitosamente');
-    } catch (error: any) {
-      console.error('❌ Error al crear sala:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Se une a una sala existente
-   */
-  async joinRoom(roomId: string, playerName: string = 'Jugador'): Promise<void> {
-    if (!this.isConnected) {
-      throw new Error('No hay conexión con el servidor');
-    }
-
-    try {
-      console.log('🚪 Uniéndose a sala:', roomId);
-      
-      // Limpiar estado anterior
-      runInAction(() => {
-        this.gameState = new GameState();
-        this.currentRoomId = roomId;
-      });
-
-      await this.gameUseCases.joinRoom(roomId, playerName);
-      console.log('✅ Unido a sala exitosamente');
-    } catch (error: any) {
-      console.error('❌ Error al unirse a sala:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Sale de la sala actual
-   */
-  async leaveRoom(): Promise<void> {
-    if (!this.isConnected) {
-      console.warn('⚠️ No conectado al servidor');
-      return;
-    }
-
-    try {
-      console.log('🚪 Saliendo de la sala...');
-      
-      await this.gameUseCases.leaveRoom();
-      
-      runInAction(() => {
-        this.currentRoomId = null;
-        this.gameState = new GameState();
-      });
-      
-      await this.refreshRooms();
-      console.log('✅ Salió de la sala exitosamente');
-    } catch (error: any) {
-      console.error('❌ Error al salir de la sala:', error);
-      runInAction(() => this.errorMessage = error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Actualiza la lista de salas
-   */
-  async refreshRooms(): Promise<void> {
-    if (!this.isConnected) {
-      console.warn('⚠️ No conectado al servidor');
-      return;
-    }
+    await this.gameRepo.disconnect();
 
     runInAction(() => {
+      this.isConnected = false;
+      this.isLoadingRooms = false;
+      this.showCreateRoomModal = false;
+
+      this.rooms = [];
+      this.mySymbol = null;
+      this.gameState = new GameState();
+    });
+  }
+
+  async handleCellPress(position: number): Promise<void> {
+    const result = await this.useCases.makeMove(position, this.gameState, this.mySymbol);
+
+    if (!result.success) {
+      console.warn('Movimiento inválido:', result.error);
+    }
+
+  }
+
+  async resetGame(): Promise<void> {
+    await this.useCases.resetGame();
+  }
+
+  async createRoom(roomName: string): Promise<void> {
+    await this.useCases.createRoom(roomName);
+  }
+
+  async joinRoom(roomId: string): Promise<void> {
+    await this.useCases.joinRoom(roomId, 'Jugador');
+  }
+
+  async leaveRoom(): Promise<void> {
+    await this.useCases.leaveRoom();
+  }
+
+  async refreshRooms(): Promise<void> {
+    runInAction(() => {
       this.isLoadingRooms = true;
-      this.errorMessage = '';
     });
 
-    try {
-      console.log('🔄 Actualizando lista de salas...');
-      await this.gameUseCases.getRoomList();
-    } catch (error: any) {
-      console.error('❌ Error al actualizar salas:', error);
-      runInAction(() => {
-        this.isLoadingRooms = false;
-        this.errorMessage = error.message;
-      });
-      throw error;
-    }
+    await this.useCases.getRoomList();
   }
 
-  /**
-   * Desconecta del servidor
-   */
-  async disconnect(): Promise<void> {
-    try {
-      console.log('🔌 Desconectando...');
-      await this.gameUseCases.disconnect();
-      
-      runInAction(() => {
-        this.isConnected = false;
-        this.connectionId = null;
-        this.rooms = [];
-        this.currentRoomId = null;
-        this.gameState = new GameState();
-      });
-      
-      console.log('✅ Desconectado correctamente');
-    } catch (error: any) {
-      console.error('❌ Error al desconectar:', error);
-      throw error;
+  private dropOpponent(): void {
+    if (!this.mySymbol) {
+      this.gameState.playerX = null;
+      this.gameState.playerO = null;
+      return;
     }
+
+    if (this.mySymbol === 'X') this.gameState.playerO = null;
+    if (this.mySymbol === 'O') this.gameState.playerX = null;
   }
 
-  /**
-   * Imprime el estado actual en la consola (para debugging)
-   */
-  logState(): void {
-    console.log('📊 Estado actual del ViewModel:', {
-      isConnected: this.isConnected,
-      connectionId: this.connectionId,
-      mySymbol: this.mySymbol,
-      isMyTurn: this.isMyTurn,
-      gameStatus: this.gameStatus,
-      roomsCount: this.rooms.length,
-      currentRoomId: this.currentRoomId
-    });
+  private clearSubscriptions(): void {
+    this.unsubs.forEach((u) => u());
+    this.unsubs = [];
   }
 }

@@ -1,4 +1,4 @@
-import { makeObservable, observable, action, computed } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { Player } from './Player';
 
 export class GameState {
@@ -39,7 +39,6 @@ export class GameState {
 
   /**
    * Realiza un movimiento en el tablero
-   * ✅ VALIDA todo del lado del cliente
    * 
    * @param position Posición del tablero (0-8)
    * @param symbol Símbolo del jugador ('X' o 'O')

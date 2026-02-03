@@ -1,4 +1,4 @@
-TIC TAC TOE - CLEAN ARCHITECTURE + MVVM + SIGNALR 
+TIC TAC TOE - CLEAN ARCHITECTURE + MVVM + SIGNALR
 ************ (ESTÁ TAN COMPLETO PORQUE YA SE LO HE PASADO A LA IA Y LO TENGO HECHO CON SALAS Y FUNCIONA) ************
 
 SERVIDOR (C# - ASP.NET Core)
@@ -6,176 +6,200 @@ SERVIDOR (C# - ASP.NET Core)
 Entities/
     Player.cs
         + class Player
-            - ConnectionId, Symbol, Name: string { get; set; }
-            + Player()
-            + Player(connectionId, symbol, name)
-            + bool IsValid()
+          - ConnectionId, Symbol, Name: string { get; set; }
+          + Player()
+          + Player(connectionId, symbol, name)
+          + bool IsValid()
 
     Room.cs
         + class Room
-            - RoomId, RoomName: string { get; set; }
-            - PlayerX, PlayerO: Player? { get; set; }
-            - CreatedAt: DateTime { get; set; }
-            + Room()
-            + Room(roomId, roomName)
-            + int GetPlayerCount()
-            + bool IsFull()
-            + bool IsEmpty()
+          - RoomId, RoomName: string { get; set; }
+          - PlayerX, PlayerO: Player? { get; set; }
+          - CreatedAt: DateTime { get; set; }
+          + Room()
+          + Room(roomId, roomName)
+          + int GetPlayerCount()
+          + bool IsFull()
+          + bool IsEmpty()
 
 Hubs/
     GameHub.cs
         + class GameHub : Hub
-            // Estado global del Hub 
-            - static _rooms: Dictionary<string, Room>
-            - static _connectionRooms: Dictionary<string, string>
-            - static _roomCounter: int
-            
-            // Ciclo de vida
-            + async Task OnConnectedAsync()
-            + async Task OnDisconnectedAsync(Exception? exception)
-            
-            // Métodos invocables desde cliente
-            + async Task CreateRoom(string roomName)
-            + async Task JoinRoom(string roomId, string playerName)
-            + async Task BroadcastMove(int position)            
-            + async Task BroadcastReset()            
-            + async Task LeaveRoom()            
-            + async Task GetRoomList()
-            
-            // Métodos auxiliares
-            - void LeaveRoomInternal(roomId, connectionId)
-            - List<object> GetRoomListInternal()
-            - async Task SendRoomListToAll()
+          // Estado global del Hub
+          - static _rooms: Dictionary<string, Room>
+          - static _connectionRooms: Dictionary<string, string>
+          - static _roomCounter: int
+          
+          // Ciclo de vida
+          + async Task OnConnectedAsync() -> SendRoomListToAll()
+          + async Task OnDisconnectedAsync(Exception? exception)
+            -> "OpponentDisconnected" + LeaveRoomInternal + SendRoomListToAll()
+          
+          // Métodos invocables desde cliente
+          + async Task CreateRoom(string roomName)
+          + async Task JoinRoom(string roomId, string playerName = "Jugador")
+          + async Task BroadcastMove(int position)
+          + async Task BroadcastReset()
+          + async Task LeaveRoom()
+          + async Task GetRoomList()
+          
+          // Métodos auxiliares
+          - void LeaveRoomInternal(roomId, connectionId)
+          - List<object> GetRoomListInternal()
+          - async Task SendRoomListToAll()
 
+Program.cs
 
 CLIENTE (React Native - TypeScript)
 
 app/
     App.tsx
-        - Estado: screen, currentRoomId, container, viewModel
-        -> maneja navegación entre RoomListScreen y GameScreen
-        -> funciones: handleCreateRoom, handleJoinRoom, handleLeaveGame, handleRefreshRooms
 
 core/
     container.ts
-        + createContainer(config)
-        + getGameViewModel(container)
-        + getAppConfig(container)
-        + getGameUseCases(container)
-        + getSignalRConnection(container)
-        + clearContainer(container)
-    
     types.ts
-        + interface AppConfig
-        + const TYPES
 
 data/
     SignalRConnection.ts (@injectable)
-        + interface ISignalRConnection
-            + start(), stop(), invoke(methodName, ...args)
-            + on(eventName, callback), isConnected(), getConnectionId()
-        
-        + class SignalRConnection implements ISignalRConnection
-            - connection: HubConnection | null
-            - hubUrl: string
-            + constructor(@inject(TYPES.HubUrl) hubUrl)
-            + async start()
-            + async stop()
-            + async invoke(methodName, ...args)
-            + on(eventName, callback)
-            + isConnected()
-            + getConnectionId()
+      + class SignalRConnection
+        - connection: HubConnection | null
+        - hubUrl: string
+        + constructor(@inject(TYPES.HubUrl) hubUrl)
+        + async connect()
+        + async disconnect()
+        + isConnected()
+        + getConnectionId()
+        + on(eventName, handler)
+        + off(eventName, handler)
+        + async invoke(methodName, ...args)
+
+    SignalRGameRepository.ts (@injectable)
+      + class SignalRGameRepository implements IGameRepository
+        - conn: SignalRConnection (SINGLETON compartida)
+        - handlers arrays (sin RxJS): playerJoined, moveMade, reset, opponentDisconnected, opponentLeft
+        - bound handlers para on/off
+        + async connect()
+        + async disconnect()
+        + isConnected(), getConnectionId()
+        + async sendMove(position)
+        + async sendReset()
+        + onPlayerJoined(handler): Unsubscribe
+        + onMoveMade(handler): Unsubscribe
+        + onGameReset(handler): Unsubscribe
+        + onOpponentDisconnected(handler): Unsubscribe
+        + onOpponentLeft(handler): Unsubscribe
+
+    SignalRRoomRepository.ts (@injectable)
+      + class SignalRRoomRepository implements IRoomRepository
+        - conn: SignalRConnection (SINGLETON compartida)
+        - roomListHandlers: Array<(rooms) => void>
+        - roomListListenerAttached: boolean
+        - boundRoomListUpdated -> Room.fromJSON mapping
+        + createRoom(name) -> invoke("CreateRoom", name)
+        + joinRoom(id, playerName?) -> invoke("JoinRoom", id, playerName)
+        + leaveRoom() -> invoke("LeaveRoom")
+        + requestRoomList() -> ensureListener() + invoke("GetRoomList")
+        + onRoomListUpdated(handler): Unsubscribe
 
 domain/
     entities/
-        GameState.ts
-            + class GameState
-                - board, currentTurn, winner, gameOver (observable)
-                - playerX, playerO (observable)
-                + get waitingForPlayer (computed)
-                + makeMove(position, symbol) (action)
-                + reset() (action)
-                + isBoardFull(), isCellEmpty(position), getCellValue(position)
-                + static fromJSON(json), toJSON()
-        
-        Player.ts
-            + class Player
-                - connectionId, symbol, name
-                + constructor(connectionId, symbol, name)
-                + static fromJSON(json)
-                + toJSON()
-                + isValid()
-        
-        Room.ts
-            + class Room
-                - roomId, roomName, playerCount, maxPlayers, isFull, createdAt
-                + constructor(roomId?, roomName?, playerCount?, ...)
-                + static fromJSON(json)
-                + toJSON()
-                + getPlayerCountText()
-                + canJoin()
-    
+      GameState.ts (MobX)
+        + class GameState
+          - board, currentTurn, winner, gameOver (observable)
+          - playerX, playerO (observable)
+          + get waitingForPlayer (computed)
+          + makeMove(position, symbol) (action)
+          + reset() (action)
+          + isBoardFull(), isCellEmpty(position), getCellValue(position)
+          + static fromJSON(json), toJSON()
+
+      Player.ts
+        + class Player
+          - connectionId, symbol, name
+          + static fromJSON(json)
+          + toJSON()
+          + isValid()
+
+      Room.ts
+        + class Room
+          - roomId, roomName, playerCount, maxPlayers, isFull, createdAt
+          + static fromJSON(json)
+          + toJSON()
+          + getPlayerCountText()
+          + canJoin()
+
     interfaces/
-        IGameUseCases.ts
-            + interface IGameUseCases
-                + initializeConnection(), disconnect(), isConnected(), getConnectionId()
-                + broadcastMove(position), broadcastReset()
-                + onMoveBroadcasted(callback), onResetBroadcasted(callback)
-                + onPlayerJoined(callback), onOpponentDisconnected(callback), onOpponentLeft(callback)
-                + createRoom(roomName), joinRoom(roomId, playerName?), leaveRoom()
-                + getRoomList(), onRoomListUpdated(callback)
-    
+      IGameRepository.ts
+        + type Unsubscribe = () => void
+        + interfaces de eventos: PlayerJoinedEvent, MoveMadeEvent, GameResetEvent
+        + interface IGameRepository
+          + connect(), disconnect()
+          + isConnected(), getConnectionId()
+          + sendMove(position), sendReset()
+          + onPlayerJoined(handler), onMoveMade(handler), onGameReset(handler)
+          + onOpponentDisconnected(handler), onOpponentLeft(handler)
+
+      IRoomRepository.ts
+        + interface IRoomRepository
+          + createRoom(roomName)
+          + joinRoom(roomId, playerName?)
+          + leaveRoom()
+          + requestRoomList()
+          + onRoomListUpdated(handler): Unsubscribe
+
+      IGameUseCases.ts
+        + interface IGameUseCases
+          + makeMove(position, gameState, mySymbol)
+          + resetGame()
+          + createRoom(roomName)
+          + joinRoom(roomId, playerName?)
+          + leaveRoom()
+          + getRoomList()
+
     usecases/
-        GameUseCases.ts (@injectable)
-            + class GameUseCases implements IGameUseCases
-                - connection: ISignalRConnection
-                + constructor(@inject(TYPES.ISignalRConnection) connection)
-                + async initializeConnection() -> connection.start()
-                + async disconnect() -> connection.stop()
-                + isConnected() -> connection.isConnected()
-                + getConnectionId() -> connection.getConnectionId()
-                + async broadcastMove(position) -> connection.invoke('BroadcastMove')
-                + async broadcastReset() -> connection.invoke('BroadcastReset')
-                + onMoveBroadcasted(callback) -> connection.on('MoveBroadcasted')
-                + onResetBroadcasted(callback) -> connection.on('ResetBroadcasted')
-                + onPlayerJoined(callback) -> connection.on('PlayerJoined')
-                + onOpponentDisconnected(callback) -> connection.on('OpponentDisconnected')
-                + onOpponentLeft(callback) -> connection.on('OpponentLeft')
-                + async createRoom(roomName) -> connection.invoke('CreateRoom')
-                + async joinRoom(roomId, playerName) -> connection.invoke('JoinRoom')
-                + async leaveRoom() -> connection.invoke('LeaveRoom')
-                + async getRoomList() -> connection.invoke('GetRoomList')
-                + onRoomListUpdated(callback) -> connection.on('RoomListUpdated')
+      GameUseCases.ts (@injectable)
+        + class GameUseCases implements IGameUseCases
+          - gameRepo: IGameRepository
+          - roomRepo: IRoomRepository
+          + makeMove(...) (validaciones cliente)
+          + resetGame()
+          + createRoom() (min 3 chars, max 30)
+          + joinRoom(), leaveRoom(), getRoomList()
 
 UI/
     screens/
-        RoomListScreen.tsx (observer)
-            -> muestra lista de salas disponibles con animaciones
-            -> botones: crear sala y refrescar
-        
-        CreateRoomScreen.tsx
-            -> para crear nueva sala con input de nombre
-        
-        GameScreen.tsx (observer)
-            -> tablero 3x3 interactivo para jugar
-            -> muestra estado del juego y turno actual
-    
+      RoomListScreen.tsx (observer)
+        -> lista de salas disponibles
+        -> botones: crear sala y refrescar
+
+      CreateRoomScreen.tsx
+        -> modal crear sala con input
+        -> validación UX: si < 3 chars -> Alert + NO borra texto
+        -> botón "Crear" disabled si no cumple mínimo + hint "Mínimo 3 caracteres"
+
+      GameScreen.tsx (observer)
+        -> tablero 3x3 interactivo
+        -> estado: esperando jugador, turno actual, ganador/empate
+        -> botón "Nuevo Juego" -> resetGame()
+
     viewmodels/
-        GameViewModel.ts (@injectable, MobX)
-            + class GameViewModel
-                - gameState, isConnected, connectionId, errorMessage (observable)
-                - rooms, showCreateRoomModal, isLoadingRooms, currentRoomId (observable)
-                - gameUseCases: IGameUseCases
-                + constructor(@inject(TYPES.IGameUseCases) gameUseCases)
-                + async initialize()
-                + get mySymbol (computed)
-                + get isMyTurn (computed)
-                + get isWaitingForOpponent (computed)
-                + get gameStatus (computed)
-                + async handleCellPress(position)
-                + async resetGame()
-                + async createRoom(roomName)
-                + async joinRoom(roomId, playerName?)
-                + async leaveRoom()
-                + async refreshRooms()
-                + async disconnect()
+      GameViewModel.ts (@injectable, MobX)
+        + class GameViewModel
+          - gameState: GameState (observable)
+          - rooms: Room[] (observable)
+          - isConnected, isLoadingRooms, showCreateRoomModal (observable)
+          - mySymbol (observable)
+          - unsubs: Unsubscribe[] (privado)
+          + constructor(@inject(IGameRepository), @inject(IRoomRepository), @inject(IGameUseCases))
+          + get isMyTurn (computed)
+          + async initialize()
+          + async connect()
+          + async disconnect()
+          + async handleCellPress(position)
+          + async resetGame()
+          + async createRoom(name)
+          + async joinRoom(roomId)
+          + async leaveRoom()
+          + async refreshRooms()
+          - dropOpponent()
+          - clearSubscriptions()
