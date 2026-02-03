@@ -22,6 +22,31 @@ Entities/
             + bool IsFull()
             + bool IsEmpty()
 
+Hubs/
+    GameHub.cs
+        + class GameHub : Hub
+            // Estado global del Hub 
+            - static _rooms: Dictionary<string, Room>
+            - static _connectionRooms: Dictionary<string, string>
+            - static _roomCounter: int
+            
+            // Ciclo de vida
+            + async Task OnConnectedAsync()
+            + async Task OnDisconnectedAsync(Exception? exception)
+            
+            // Métodos invocables desde cliente
+            + async Task CreateRoom(string roomName)
+            + async Task JoinRoom(string roomId, string playerName)
+            + async Task BroadcastMove(int position)            
+            + async Task BroadcastReset()            
+            + async Task LeaveRoom()            
+            + async Task GetRoomList()
+            
+            // Métodos auxiliares
+            - void LeaveRoomInternal(roomId, connectionId)
+            - List<object> GetRoomListInternal()
+            - async Task SendRoomListToAll()
+
 
 CLIENTE (React Native - TypeScript)
 
