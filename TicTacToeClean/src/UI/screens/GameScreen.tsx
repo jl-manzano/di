@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +7,7 @@ import {
   StyleSheet,
   StatusBar,
   Dimensions,
-  ScrollView
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GameViewModel } from '../../UI/viewmodels/GameViewModel';
@@ -17,16 +18,45 @@ interface GameScreenProps {
 }
 
 const { width } = Dimensions.get('window');
-const BOARD_SIZE = Math.min(width * 0.9, 400);
-const CELL_SIZE = (BOARD_SIZE - 32) / 3;
+const isWeb = width > 500;
+const BOARD_SIZE = isWeb ? Math.min(width * 0.4, 400) : Math.min(width * 0.88, 360);
+const CELL_SIZE = (BOARD_SIZE - 24) / 3;
 
 const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
+  // Estado local para guardar datos del modal y evitar flash de "null"
+  const [modalData, setModalData] = useState<{
+    winner: string;
+    emoji: string;
+    title: string;
+    subtitle: string;
+  } | null>(null);
+
+  // Detectar cambios en el estado del juego
+  useEffect(() => {
+    const { gameOver, winner } = viewModel.gameState;
+    
+    if (gameOver && winner && (winner === 'X' || winner === 'O' || winner === 'draw')) {
+      // Juego terminó - guardar datos y mostrar modal
+      const emoji = winner === 'draw' ? '🤝' : '🏆';
+      const title = winner === 'draw' ? '¡EMPATE!' : `¡GANÓ ${winner}!`;
+      const subtitle = winner === 'draw' 
+        ? 'Buen juego' 
+        : (winner === viewModel.mySymbol ? '¡Felicidades!' : 'Mejor suerte la próxima');
+      
+      setModalData({ winner, emoji, title, subtitle });
+    } else if (!gameOver) {
+      // Juego reseteado (desde servidor) - cerrar modal para ambos jugadores
+      setModalData(null);
+    }
+  }, [viewModel.gameState.gameOver, viewModel.gameState.winner, viewModel.mySymbol]);
+
   const handleCellPress = (position: number) => {
     viewModel.handleCellPress(position);
   };
 
   const handleReset = () => {
-    console.log('🔘 Botón Nuevo Juego presionado');
+    // Solo envía el reset al servidor - el modal se cerrará automáticamente
+    // cuando llegue el evento ResetBroadcasted a ambos jugadores
     viewModel.resetGame();
   };
 
@@ -62,32 +92,6 @@ const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
     );
   };
 
-  const getResultMessage = () => {
-    if (!viewModel.gameState.gameOver) {
-      return null;
-    }
-
-    if (viewModel.gameState.winner === 'draw') {
-      return (
-        <View style={[styles.resultCard, styles.resultDraw]}>
-          <Text style={styles.resultEmoji}>🤝</Text>
-          <Text style={styles.resultTitle}>¡EMPATE!</Text>
-          <Text style={styles.resultSubtitle}>Buen juego</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={[styles.resultCard, styles.resultWin]}>
-        <Text style={styles.resultEmoji}>🏆</Text>
-        <Text style={styles.resultTitle}>
-          ¡GANÓ {viewModel.gameState.winner}!
-        </Text>
-        <Text style={styles.resultSubtitle}>¡Felicidades!</Text>
-      </View>
-    );
-  };
-
   const getStatusMessage = () => {
     if (viewModel.gameState.waitingForPlayer) {
       return 'Esperando jugador...';
@@ -107,102 +111,117 @@ const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
     <SafeAreaView style={styles.mainContainer}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          {onLeave && (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={onLeave}
-            >
-              <Text style={styles.backButtonText}>← Salas</Text>
-            </TouchableOpacity>
-          )}
+      {/* Header */}
+      <View style={styles.header}>
+        {onLeave && (
+          <TouchableOpacity style={styles.backButton} onPress={onLeave}>
+            <Text style={styles.backButtonText}>← Salas</Text>
+          </TouchableOpacity>
+        )}
 
-          <Text style={styles.headerTitle}>Tic Tac Toe</Text>
-          <Text style={styles.headerSubtitle}>Clean Architecture + MVVM</Text>
-          
-          <View style={[
-            styles.statusIndicator,
-            { backgroundColor: viewModel.isConnected ? '#22c55e' : '#ef4444' }
-          ]}>
-            <Text style={styles.statusText}>
-              {viewModel.isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
-            </Text>
-          </View>
-
-          <View style={styles.turnIndicator}>
-            <Text style={styles.turnText}>
-              {getStatusMessage()}
-            </Text>
-          </View>
+        <Text style={styles.headerTitle}>Tic Tac Toe</Text>
+        
+        <View style={[
+          styles.statusIndicator,
+          { backgroundColor: viewModel.isConnected ? '#22c55e' : '#ef4444' }
+        ]}>
+          <Text style={styles.statusText}>
+            {viewModel.isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
+          </Text>
         </View>
 
-        <View style={styles.gameCard}>
-          {viewModel.gameState.waitingForPlayer ? (
-            <View style={styles.waitingContainer}>
-              <Text style={styles.waitingEmoji}>⏳</Text>
-              <Text style={styles.waitingText}>Esperando oponente...</Text>
-              <Text style={styles.waitingSubtext}>
-                Abre la app en otro dispositivo para comenzar
-              </Text>
+        <View style={styles.turnIndicator}>
+          <Text style={styles.turnText}>{getStatusMessage()}</Text>
+        </View>
+      </View>
+
+      {/* Game Content */}
+      <View style={styles.gameCard}>
+        {viewModel.gameState.waitingForPlayer ? (
+          <View style={styles.waitingContainer}>
+            <Text style={styles.waitingEmoji}>⏳</Text>
+            <Text style={styles.waitingText}>Esperando oponente...</Text>
+            <Text style={styles.waitingSubtext}>
+              Abre la app en otro dispositivo
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.gameContent}>
+            {/* Players Info */}
+            <View style={styles.playersInfo}>
+              <View style={styles.playerCard}>
+                <Text style={styles.playerSymbol}>❌</Text>
+                <Text style={styles.playerLabel}>Jugador X</Text>
+                {viewModel.gameState.currentTurn === 'X' && 
+                 !viewModel.gameState.gameOver && (
+                  <View style={styles.activeTurnDot} />
+                )}
+              </View>
+              
+              <Text style={styles.vs}>VS</Text>
+              
+              <View style={styles.playerCard}>
+                <Text style={styles.playerSymbol}>⭕</Text>
+                <Text style={styles.playerLabel}>Jugador O</Text>
+                {viewModel.gameState.currentTurn === 'O' && 
+                 !viewModel.gameState.gameOver && (
+                  <View style={styles.activeTurnDot} />
+                )}
+              </View>
             </View>
-          ) : (
-            <>
-              <View style={styles.playersInfo}>
-                <View style={styles.playerCard}>
-                  <Text style={styles.playerSymbol}>❌</Text>
-                  <Text style={styles.playerLabel}>Jugador X</Text>
-                  {viewModel.gameState.currentTurn === 'X' && 
-                   !viewModel.gameState.gameOver && (
-                    <View style={styles.activeTurnDot} />
-                  )}
+
+            {/* Board */}
+            <View style={styles.boardContainer}>
+              {[0, 1, 2].map((row) => (
+                <View key={row} style={styles.row}>
+                  {[0, 1, 2].map((col) => {
+                    const position = row * 3 + col;
+                    return renderCell(position);
+                  })}
                 </View>
-                
-                <Text style={styles.vs}>VS</Text>
-                
-                <View style={styles.playerCard}>
-                  <Text style={styles.playerSymbol}>⭕</Text>
-                  <Text style={styles.playerLabel}>Jugador O</Text>
-                  {viewModel.gameState.currentTurn === 'O' && 
-                   !viewModel.gameState.gameOver && (
-                    <View style={styles.activeTurnDot} />
-                  )}
-                </View>
-              </View>
+              ))}
+            </View>
 
-              <View style={styles.boardContainer}>
-                {[0, 1, 2].map((row) => (
-                  <View key={row} style={styles.row}>
-                    {[0, 1, 2].map((col) => {
-                      const position = row * 3 + col;
-                      return renderCell(position);
-                    })}
-                  </View>
-                ))}
-              </View>
+            {/* Reset Button */}
+            <TouchableOpacity
+              style={[
+                styles.resetButton,
+                !viewModel.isConnected && styles.resetButtonDisabled
+              ]}
+              onPress={handleReset}
+              disabled={!viewModel.isConnected}
+            >
+              <Text style={styles.resetButtonText}>🔄 Nuevo Juego</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
 
-              {getResultMessage()}
-
-              <TouchableOpacity
-                style={[
-                  styles.resetButton,
-                  !viewModel.isConnected && styles.resetButtonDisabled
-                ]}
-                onPress={handleReset}
-                disabled={!viewModel.isConnected}
-              >
-                <Text style={styles.resetButtonText}>
-                  🔄 Nuevo Juego
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
+      {/* Result Modal Popup - Se cierra automáticamente cuando el servidor resetea */}
+      <Modal
+        visible={modalData !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={handleReset}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[
+            styles.resultModal,
+            modalData?.winner === 'draw' ? styles.resultModalDraw : styles.resultModalWin
+          ]}>
+            <Text style={styles.resultEmoji}>{modalData?.emoji}</Text>
+            <Text style={styles.resultTitle}>{modalData?.title}</Text>
+            <Text style={styles.resultSubtitle}>{modalData?.subtitle}</Text>
+            
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={handleReset}
+            >
+              <Text style={styles.modalButtonText}>🔄 Jugar de Nuevo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 });
@@ -212,22 +231,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#6366f1',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
   header: {
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingHorizontal: 20,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   backButton: {
     position: 'absolute',
     left: 20,
-    top: 20,
+    top: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -241,20 +253,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  headerSubtitle: {
-    color: '#e0e7ff',
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 4,
-    marginBottom: 12,
-  },
   statusIndicator: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 20,
     marginTop: 8,
   },
@@ -264,7 +269,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   turnIndicator: {
-    marginTop: 12,
+    marginTop: 10,
     paddingHorizontal: 16,
     paddingVertical: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -280,59 +285,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+  },
+  gameContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: 8,
   },
   waitingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
   },
   waitingEmoji: {
-    fontSize: 72,
-    marginBottom: 20,
+    fontSize: 60,
+    marginBottom: 16,
   },
   waitingText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   waitingSubtext: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748b',
     textAlign: 'center',
-    lineHeight: 20,
   },
   playersInfo: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 30,
     paddingHorizontal: 10,
+    marginBottom: 16,
   },
   playerCard: {
     alignItems: 'center',
     position: 'relative',
   },
   playerSymbol: {
-    fontSize: 32,
+    fontSize: isWeb ? 36 : 30,
     marginBottom: 4,
   },
   playerLabel: {
-    fontSize: 12,
+    fontSize: isWeb ? 14 : 12,
     fontWeight: '600',
     color: '#64748b',
   },
   activeTurnDot: {
     position: 'absolute',
-    top: -5,
-    right: -5,
+    top: -4,
+    right: -4,
     width: 12,
     height: 12,
     borderRadius: 6,
@@ -341,7 +346,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   vs: {
-    fontSize: 16,
+    fontSize: isWeb ? 18 : 14,
     fontWeight: '700',
     color: '#94a3b8',
   },
@@ -381,7 +386,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   cellText: {
-    fontSize: 48,
+    fontSize: isWeb ? 48 : 38,
     fontWeight: '700',
   },
   cellTextX: {
@@ -390,44 +395,13 @@ const styles = StyleSheet.create({
   cellTextO: {
     color: '#3b82f6',
   },
-  resultCard: {
-    marginTop: 30,
-    padding: 24,
-    borderRadius: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  resultWin: {
-    backgroundColor: '#fef3c7',
-  },
-  resultDraw: {
-    backgroundColor: '#e0e7ff',
-  },
-  resultEmoji: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  resultTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  resultSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-  },
   resetButton: {
     backgroundColor: '#6366f1',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 30,
+    marginTop: 20,
     shadowColor: '#6366f1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -441,6 +415,66 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  resultModal: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  resultModalWin: {
+    backgroundColor: '#fef3c7',
+  },
+  resultModalDraw: {
+    backgroundColor: '#e0e7ff',
+  },
+  resultEmoji: {
+    fontSize: 72,
+    marginBottom: 16,
+  },
+  resultTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  resultSubtitle: {
+    fontSize: 16,
+    color: '#64748b',
+    marginBottom: 28,
+  },
+  modalButton: {
+    backgroundColor: '#6366f1',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
   },
 });
 

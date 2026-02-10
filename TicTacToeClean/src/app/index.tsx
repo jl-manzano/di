@@ -12,7 +12,7 @@ import CreateRoomScreen from '../UI/screens/CreateRoomScreen';
 import GameScreen from '../UI/screens/GameScreen';
 import RoomListScreen from '../UI/screens/RoomListScreen';
 
-const HUB_URL = 'http://localhost:5251/gameHub';
+const HUB_URL = 'https://tictactoeserver-dyb5dggmhyhfa2gh.spaincentral-01.azurewebsites.net/gameHub';
 
 const appConfig: AppConfig = {
   hubUrl: HUB_URL,
@@ -23,25 +23,15 @@ const appConfig: AppConfig = {
 const App = observer(() => {
   const [screen, setScreen] = useState<'roomList' | 'game'>('roomList');
 
-  const [container] = useState(() => {
-    console.log('🎮 Creando contenedor para esta instancia de App...');
-    return createContainer(appConfig);
-  });
-
-  const [viewModel] = useState(() => {
-    console.log('🎮 Obteniendo ViewModel del contenedor...');
-    return getGameViewModel(container);
-  });
+  const [container] = useState(() => createContainer(appConfig));
+  const [viewModel] = useState(() => getGameViewModel(container));
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('🚀 Inicializando App con contenedor único...');
         await viewModel.initialize();
-        console.log('✅ App inicializada correctamente');
       } catch (error: any) {
-        console.error('❌ Error al inicializar app:', error);
-
+        console.error('Error al inicializar app:', error);
         Alert.alert(
           'Error de Conexión',
           `No se pudo conectar al servidor.\n\nURL: ${HUB_URL}\n\nVerifica que:\n1. El servidor esté ejecutándose\n2. La URL sea correcta\n3. No haya firewall bloqueando la conexión`,
@@ -53,7 +43,6 @@ const App = observer(() => {
     initializeApp();
 
     return () => {
-      console.log('🧹 Limpiando conexión...');
       viewModel.disconnect().catch((err) => console.error('Error en cleanup:', err));
     };
   }, [viewModel]);
@@ -85,14 +74,11 @@ const App = observer(() => {
 
       await viewModel.refreshRooms();
 
-      console.log('✅ Sala creada exitosamente:', trimmed);
-
       Alert.alert('Sala Creada', `La sala "${trimmed}" ha sido creada exitosamente.`, [
         { text: 'OK' },
       ]);
     } catch (error: any) {
-      console.error('❌ Error al crear sala:', error);
-
+      console.error('Error al crear sala:', error);
       Alert.alert('Error', `No se pudo crear la sala: ${error.message}`, [{ text: 'OK' }]);
     }
   };
@@ -101,25 +87,21 @@ const App = observer(() => {
     try {
       await viewModel.joinRoom(id);
       setScreen('game');
-      console.log('✅ Unido a sala:', id);
     } catch (error: any) {
-      console.error('❌ Error al unirse a sala:', error);
-
+      console.error('Error al unirse a sala:', error);
       Alert.alert('Error', `No se pudo unir a la sala: ${error.message}`, [{ text: 'OK' }]);
     }
   };
 
   const handleLeaveGame = async () => {
     try {
-      console.log('🚪 Usuario saliendo de la sala...');
       await viewModel.leaveRoom();
+      viewModel.gameState.reset();
       setScreen('roomList');
-      console.log('✅ Sala abandonada correctamente');
     } catch (error: any) {
-      console.error('❌ Error al abandonar sala:', error);
-
+      console.error('Error al abandonar sala:', error);
+      viewModel.gameState.reset();
       setScreen('roomList');
-
       Alert.alert(
         'Aviso',
         'Saliste de la sala, pero puede haber ocurrido un error al notificar al servidor.',
@@ -131,10 +113,8 @@ const App = observer(() => {
   const handleRefreshRooms = async () => {
     try {
       await viewModel.refreshRooms();
-      console.log('✅ Lista de salas actualizada');
     } catch (error: any) {
-      console.error('❌ Error al actualizar salas:', error);
-
+      console.error('Error al actualizar salas:', error);
       Alert.alert('Error', `No se pudo actualizar la lista: ${error.message}`, [{ text: 'OK' }]);
     }
   };

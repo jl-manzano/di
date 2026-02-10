@@ -12,7 +12,6 @@ import {
 
 @injectable()
 export class SignalRGameRepository implements IGameRepository {
-  // handlers
   private playerJoinedHandlers: Array<(e: PlayerJoinedEvent) => void> = [];
   private moveMadeHandlers: Array<(e: MoveMadeEvent) => void> = [];
   private gameResetHandlers: Array<(e: GameResetEvent) => void> = [];

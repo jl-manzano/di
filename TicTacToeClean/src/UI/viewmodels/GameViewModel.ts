@@ -63,14 +63,13 @@ export class GameViewModel {
             this.mySymbol = ev.symbol;
           }
 
-          const p = Player.fromJSON({
+          const player = Player.fromJSON({
             connectionId: ev.connectionId,
             symbol: ev.symbol,
             playerName: ev.playerName,
           });
 
-          if (ev.symbol === 'X') this.gameState.playerX = p;
-          if (ev.symbol === 'O') this.gameState.playerO = p;
+          this.gameState.assignPlayer(player);
         });
       })
     );
@@ -142,7 +141,6 @@ export class GameViewModel {
     if (!result.success) {
       console.warn('Movimiento inválido:', result.error);
     }
-
   }
 
   async resetGame(): Promise<void> {
@@ -171,13 +169,14 @@ export class GameViewModel {
 
   private dropOpponent(): void {
     if (!this.mySymbol) {
-      this.gameState.playerX = null;
-      this.gameState.playerO = null;
+      // Usar el método clearPlayers en lugar de asignación directa
+      this.gameState.clearPlayers();
       return;
     }
 
-    if (this.mySymbol === 'X') this.gameState.playerO = null;
-    if (this.mySymbol === 'O') this.gameState.playerX = null;
+    // Usar el método removePlayer en lugar de asignación directa
+    const opponent = this.mySymbol === 'X' ? 'O' : 'X';
+    this.gameState.removePlayer(opponent);
   }
 
   private clearSubscriptions(): void {

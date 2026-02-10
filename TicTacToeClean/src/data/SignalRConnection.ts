@@ -27,17 +27,41 @@ export class SignalRConnection {
     if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) return;
 
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(this.hubUrl, { transport: signalR.HttpTransportType.WebSockets })
+      .withUrl(this.hubUrl, {
+        transport: signalR.HttpTransportType.WebSockets | 
+                   signalR.HttpTransportType.ServerSentEvents | 
+                   signalR.HttpTransportType.LongPolling,
+        skipNegotiation: false,
+      })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
-      .configureLogging(signalR.LogLevel.Information)
+      .configureLogging(signalR.LogLevel.Warning)
       .build();
 
-    await this.connection.start();
+    this.connection.onreconnecting((error) => {
+      console.warn('Reconectando...', error?.message);
+    });
+
+    this.connection.onclose((error) => {
+      if (error) console.error('Conexión cerrada:', error.message);
+    });
+
+    try {
+      await this.connection.start();
+    } catch (error) {
+      console.error('Error al conectar:', error);
+      throw error;
+    }
   }
 
   async disconnect(): Promise<void> {
     if (!this.connection) return;
-    await this.connection.stop();
+    
+    try {
+      await this.connection.stop();
+    } catch (error) {
+      console.error('Error al desconectar:', error);
+    }
+    
     this.connection = null;
   }
 

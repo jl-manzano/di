@@ -1,14 +1,50 @@
+/**
+ * Entidad de dominio que representa un jugador en el juego.
+ * Contiene la información esencial de identidad y estado del jugador.
+ */
 export class Player {
-  connectionId: string;
-  symbol: string; // "X" o "O"
-  name: string;
+  private _connectionId: string;
+  private _symbol: string; // "X" o "O"
+  private _name: string;
 
   constructor(connectionId: string, symbol: string, name: string) {
-    this.connectionId = connectionId || '';
-    this.symbol = symbol || '';
-    this.name = name || 'Jugador';
+    this._connectionId = connectionId || '';
+    this._symbol = symbol || '';
+    this._name = name || 'Jugador';
   }
 
+  // Getters públicos para acceso controlado
+  get connectionId(): string {
+    return this._connectionId;
+  }
+
+  get symbol(): string {
+    return this._symbol;
+  }
+
+  get name(): string {
+    return this._name;
+  }
+
+  // Setters para permitir mutación controlada
+  set connectionId(value: string) {
+    this._connectionId = value;
+  }
+
+  set symbol(value: string) {
+    this._symbol = value;
+  }
+
+  set name(value: string) {
+    this._name = value;
+  }
+
+  /**
+   * Deserializa un objeto JSON en una instancia de Player.
+   * Soporta tanto camelCase como PascalCase para compatibilidad con C#.
+   * @param json - Objeto JSON con los datos del jugador
+   * @returns Nueva instancia de Player
+   */
   static fromJSON(json: any): Player {
     if (!json) {
       return new Player('', '', 'Jugador');
@@ -21,15 +57,24 @@ export class Player {
     );
   }
 
+  /**
+   * Serializa el jugador a formato JSON.
+   * @returns Objeto JSON con los datos del jugador
+   */
   toJSON(): object {
     return {
-      connectionId: this.connectionId,
-      symbol: this.symbol,
-      name: this.name
+      connectionId: this._connectionId,
+      symbol: this._symbol,
+      name: this._name
     };
   }
 
+  /**
+   * Verifica si el jugador tiene datos válidos.
+   * Un jugador es válido si tiene connectionId y símbolo asignado.
+   * @returns true si el jugador es válido, false en caso contrario
+   */
   isValid(): boolean {
-    return this.connectionId.length > 0 && this.symbol.length > 0;
+    return this._connectionId.length > 0 && this._symbol.length > 0;
   }
 }

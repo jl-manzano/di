@@ -19,38 +19,72 @@ export class GameUseCases implements IGameUseCases {
     mySymbol: string | null
   ): Promise<{ success: boolean; position: number; error?: string }> {
 
-    if (!mySymbol) return { success: false, position, error: 'No tienes un símbolo asignado' };
-    if (position < 0 || position > 8) return { success: false, position, error: 'Posición inválida' };
-    if (!gameState.isCellEmpty(position)) return { success: false, position, error: 'La celda ya está ocupada' };
-    if (gameState.gameOver) return { success: false, position, error: 'El juego ya terminó' };
-    if (gameState.waitingForPlayer) return { success: false, position, error: 'Esperando al segundo jugador' };
-    if (gameState.currentTurn !== mySymbol) return { success: false, position, error: 'No es tu turno' };
+    let success = true;
+    let error: string | undefined;
 
-    try {
-      await this.gameRepo.sendMove(position);
-      return { success: true, position };
-    } catch (error: any) {
-      return { success: false, position, error: error?.message ?? 'Error desconocido' };
+    if (!mySymbol) {
+      success = false;
+      error = 'No tienes un símbolo asignado';
+    } else if (position < 0 || position > 8) {
+      success = false;
+      error = 'Posición inválida';
+    } else if (!gameState.isCellEmpty(position)) {
+      success = false;
+      error = 'La celda ya está ocupada';
+    } else if (gameState.gameOver) {
+      success = false;
+      error = 'El juego ya terminó';
+    } else if (gameState.waitingForPlayer) {
+      success = false;
+      error = 'Esperando al segundo jugador';
+    } else if (gameState.currentTurn !== mySymbol) {
+      success = false;
+      error = 'No es tu turno';
     }
+
+    if (success) {
+      try {
+        await this.gameRepo.sendMove(position);
+      } catch (err: any) {
+        success = false;
+        error = err?.message ?? 'Error desconocido';
+      }
+    }
+
+    return { success, position, error };
   }
 
   async resetGame(): Promise<void> {
-    if (!this.gameRepo.isConnected()) throw new Error('No hay conexión con el servidor');
+    if (!this.gameRepo.isConnected()) {
+      throw new Error('No hay conexión con el servidor');
+    }
+
     await this.gameRepo.sendReset();
   }
 
   async createRoom(roomName: string): Promise<void> {
-    if (!roomName || !roomName.trim()) throw new Error('El nombre de la sala no puede estar vacío');
+    if (!roomName || !roomName.trim()) {
+      throw new Error('El nombre de la sala no puede estar vacío');
+    }
 
     const trimmed = roomName.trim();
-    if (trimmed.length < 3) throw new Error('El nombre debe tener al menos 3 caracteres');
-    if (trimmed.length > 30) throw new Error('El nombre no puede exceder 30 caracteres');
+
+    if (trimmed.length < 3) {
+      throw new Error('El nombre debe tener al menos 3 caracteres');
+    }
+
+    if (trimmed.length > 30) {
+      throw new Error('El nombre no puede exceder 30 caracteres');
+    }
 
     await this.roomRepo.createRoom(trimmed);
   }
 
-  async joinRoom(roomId: string, playerName: string = 'Jugador'): Promise<void> {
-    if (!roomId || !roomId.trim()) throw new Error('El ID de la sala no puede estar vacío');
+  async joinRoom(roomId: string, playerName = 'Jugador'): Promise<void> {
+    if (!roomId || !roomId.trim()) {
+      throw new Error('El ID de la sala no puede estar vacío');
+    }
+
     await this.roomRepo.joinRoom(roomId.trim(), playerName);
   }
 
