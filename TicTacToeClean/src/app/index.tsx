@@ -1,3 +1,24 @@
+/**
+ * @file App.tsx
+ * @summary Componente raíz de la aplicación Tic Tac Toe multijugador.
+ * 
+ * Punto de entrada principal que configura el contenedor de dependencias,
+ * inicializa el ViewModel y gestiona la navegación entre pantallas.
+ * 
+ * Flujo de la aplicación:
+ * 1. Crea el contenedor IoC con la configuración
+ * 2. Obtiene el GameViewModel singleton
+ * 3. Inicializa la conexión al servidor SignalR
+ * 4. Muestra RoomListScreen para seleccionar/crear sala
+ * 5. Navega a GameScreen al unirse a una sala
+ * 
+ * Pantallas:
+ * - roomList: Lista de salas disponibles + modal de creación
+ * - game: Pantalla del tablero de juego
+ * 
+ * El componente es un observer de MobX para reactividad automática.
+ */
+
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
@@ -12,20 +33,30 @@ import CreateRoomScreen from '../UI/screens/CreateRoomScreen';
 import GameScreen from '../UI/screens/GameScreen';
 import RoomListScreen from '../UI/screens/RoomListScreen';
 
+/** URL del hub SignalR del servidor de juego */
 const HUB_URL = 'https://tictactoeserver-dyb5dggmhyhfa2gh.spaincentral-01.azurewebsites.net/gameHub';
 
+/** Configuración de la aplicación */
 const appConfig: AppConfig = {
   hubUrl: HUB_URL,
   autoReconnect: true,
   logLevel: 'debug',
 };
 
+/**
+ * Componente raíz de la aplicación.
+ * Gestiona la navegación y ciclo de vida de la conexión.
+ */
 const App = observer(() => {
+  /** Pantalla actual ('roomList' o 'game') */
   const [screen, setScreen] = useState<'roomList' | 'game'>('roomList');
 
+  /** Contenedor de inyección de dependencias (singleton) */
   const [container] = useState(() => createContainer(appConfig));
+  /** ViewModel principal del juego */
   const [viewModel] = useState(() => getGameViewModel(container));
 
+  // Inicialización y cleanup
   useEffect(() => {
     const initializeApp = async () => {
       try {
@@ -47,12 +78,18 @@ const App = observer(() => {
     };
   }, [viewModel]);
 
+  /**
+   * Abre el modal para crear una nueva sala.
+   */
   const handleCreateRoom = () => {
     runInAction(() => {
       viewModel.showCreateRoomModal = true;
     });
   };
 
+  /**
+   * Maneja el submit del formulario de creación de sala.
+   */
   const handleCreateRoomSubmit = async (name: string) => {
     const trimmed = name.trim();
 
@@ -83,6 +120,9 @@ const App = observer(() => {
     }
   };
 
+  /**
+   * Une al jugador a una sala y navega a la pantalla de juego.
+   */
   const handleJoinRoom = async (id: string) => {
     try {
       await viewModel.joinRoom(id);
@@ -93,6 +133,9 @@ const App = observer(() => {
     }
   };
 
+  /**
+   * Abandona la sala actual y vuelve a la lista de salas.
+   */
   const handleLeaveGame = async () => {
     try {
       await viewModel.leaveRoom();
@@ -110,6 +153,9 @@ const App = observer(() => {
     }
   };
 
+  /**
+   * Refresca la lista de salas disponibles.
+   */
   const handleRefreshRooms = async () => {
     try {
       await viewModel.refreshRooms();
@@ -119,6 +165,7 @@ const App = observer(() => {
     }
   };
 
+  // Renderizado de la pantalla de lista de salas
   if (screen === 'roomList') {
     return (
       <SafeAreaProvider>
@@ -144,6 +191,7 @@ const App = observer(() => {
     );
   }
 
+  // Renderizado de la pantalla de juego
   return (
     <SafeAreaProvider>
       <View style={styles.container}>

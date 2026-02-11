@@ -1,3 +1,23 @@
+/**
+ * @file GameScreen.tsx
+ * @summary Pantalla principal del juego Tic Tac Toe.
+ * 
+ * Renderiza el tablero de juego 3x3, información de jugadores, indicadores
+ * de turno y estado de conexión. Incluye un modal de resultado que aparece
+ * al finalizar la partida (victoria o empate).
+ * 
+ * Características:
+ * - Tablero interactivo con feedback visual
+ * - Indicador de turno actual y estado de conexión
+ * - Modal de resultado con animación fade
+ * - Estado de espera cuando falta un jugador
+ * - Botón de reinicio sincronizado con el servidor
+ * - Diseño responsive para web y móvil
+ * 
+ * El componente es un observer de MobX que reacciona automáticamente
+ * a cambios en el GameViewModel.
+ */
+
 import { observer } from 'mobx-react-lite';
 import { useState, useEffect } from 'react';
 import {
@@ -13,7 +33,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GameViewModel } from '../../UI/viewmodels/GameViewModel';
 
 interface GameScreenProps {
+  /** ViewModel con el estado y lógica del juego */
   viewModel: GameViewModel;
+  /** Callback opcional para abandonar la partida */
   onLeave?: () => void;
 }
 
@@ -22,6 +44,10 @@ const isWeb = width > 500;
 const BOARD_SIZE = isWeb ? Math.min(width * 0.4, 400) : Math.min(width * 0.88, 360);
 const CELL_SIZE = (BOARD_SIZE - 24) / 3;
 
+/**
+ * Pantalla de juego que muestra el tablero y gestiona la interacción.
+ * Observa cambios en el ViewModel para actualizar la UI automáticamente.
+ */
 const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
   // Estado local para guardar datos del modal y evitar flash de "null"
   const [modalData, setModalData] = useState<{
@@ -31,7 +57,7 @@ const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
     subtitle: string;
   } | null>(null);
 
-  // Detectar cambios en el estado del juego
+  // Detectar cambios en el estado del juego para mostrar/ocultar modal
   useEffect(() => {
     const { gameOver, winner } = viewModel.gameState;
     
@@ -50,16 +76,24 @@ const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
     }
   }, [viewModel.gameState.gameOver, viewModel.gameState.winner, viewModel.mySymbol]);
 
+  /**
+   * Maneja el press en una celda del tablero.
+   */
   const handleCellPress = (position: number) => {
     viewModel.handleCellPress(position);
   };
 
+  /**
+   * Envía solicitud de reinicio al servidor.
+   * El modal se cierra automáticamente cuando llega el evento ResetBroadcasted.
+   */
   const handleReset = () => {
-    // Solo envía el reset al servidor - el modal se cerrará automáticamente
-    // cuando llegue el evento ResetBroadcasted a ambos jugadores
     viewModel.resetGame();
   };
 
+  /**
+   * Renderiza una celda individual del tablero.
+   */
   const renderCell = (position: number) => {
     const value = viewModel.gameState.board[position];
     const isEmpty = !value || value === '';
@@ -92,6 +126,9 @@ const GameScreen = observer(({ viewModel, onLeave }: GameScreenProps) => {
     );
   };
 
+  /**
+   * Genera el mensaje de estado según el estado actual del juego.
+   */
   const getStatusMessage = () => {
     if (viewModel.gameState.waitingForPlayer) {
       return 'Esperando jugador...';

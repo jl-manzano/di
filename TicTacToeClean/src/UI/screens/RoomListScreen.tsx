@@ -1,3 +1,23 @@
+/**
+ * @file RoomListScreen.tsx
+ * @summary Pantalla que muestra la lista de salas de juego disponibles.
+ * 
+ * Presenta una lista scrolleable de salas con información de estado,
+ * capacidad y disponibilidad. Permite crear nuevas salas, unirse a
+ * existentes y refrescar la lista.
+ * 
+ * Características:
+ * - Lista de salas con FlatList para rendimiento optimizado
+ * - Cards animadas con efecto de escala al presionar
+ * - Indicador de conexión con animación de pulso cuando offline
+ * - Estado vacío con call-to-action para crear sala
+ * - Estadísticas de salas totales y disponibles
+ * - Diseño visual con badges de estado (disponible/completa)
+ * 
+ * Componentes internos:
+ * - RoomCard: Tarjeta individual para cada sala
+ */
+
 import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import {
@@ -14,14 +34,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Room } from '../../domain/entities/Room';
 
 interface RoomListScreenProps {
+  /** Lista de salas disponibles */
   rooms: Room[];
+  /** Estado de conexión con el servidor */
   isConnected: boolean;
+  /** Indica si se está cargando la lista */
   isLoading: boolean;
+  /** Callback para abrir modal de creación */
   onCreateRoom: () => void;
+  /** Callback para unirse a una sala */
   onJoinRoom: (roomId: string) => void;
+  /** Callback para refrescar la lista */
   onRefresh: () => void;
 }
 
+/**
+ * Componente de tarjeta individual para mostrar una sala.
+ * Incluye animación de escala al presionar.
+ */
 const RoomCard = ({ item, onJoinRoom }: { item: Room; onJoinRoom: (roomId: string) => void }) => {
   const [scaleAnim] = useState(new Animated.Value(1));
   const canJoin = item.canJoin();
@@ -113,6 +143,10 @@ const RoomCard = ({ item, onJoinRoom }: { item: Room; onJoinRoom: (roomId: strin
   );
 };
 
+/**
+ * Pantalla principal que lista las salas de juego disponibles.
+ * Observer de MobX para reactividad automática.
+ */
 const RoomListScreen = observer(({
   rooms,
   isConnected,
@@ -123,6 +157,7 @@ const RoomListScreen = observer(({
 }: RoomListScreenProps) => {
   const [pulseAnim] = useState(new Animated.Value(1));
 
+  // Animación de pulso para el indicador de conexión cuando está offline
   useEffect(() => {
     if (!isConnected) {
       Animated.loop(
@@ -148,6 +183,9 @@ const RoomListScreen = observer(({
     return <RoomCard item={item} onJoinRoom={onJoinRoom} />;
   };
 
+  /**
+   * Renderiza el estado vacío cuando no hay salas.
+   */
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconContainer}>

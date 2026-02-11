@@ -1,3 +1,19 @@
+/**
+ * @file CreateRoomScreen.tsx
+ * @summary Componente modal para crear nuevas salas de juego.
+ * 
+ * Presenta un formulario modal que permite al usuario introducir
+ * el nombre de una nueva sala. Incluye validación en tiempo real,
+ * feedback visual del estado del botón y manejo de eventos de teclado.
+ * 
+ * Características:
+ * - Modal con overlay semi-transparente
+ * - Input con validación de longitud mínima (3 caracteres)
+ * - Botón de crear deshabilitado hasta cumplir validación
+ * - Cierre al tocar fuera del modal o botón cancelar
+ * - Soporte para KeyboardAvoidingView en iOS/Android
+ */
+
 import { useState } from 'react';
 import {
   Alert,
@@ -12,14 +28,25 @@ import {
 } from 'react-native';
 
 interface CreateRoomScreenProps {
+  /** Controla la visibilidad del modal */
   visible: boolean;
+  /** Callback al cerrar el modal (cancelar o tocar fuera) */
   onClose: () => void;
+  /** Callback al crear la sala con el nombre validado */
   onCreate: (roomName: string) => void | Promise<void>;
 }
 
+/**
+ * Modal para crear una nueva sala de juego.
+ * Valida que el nombre tenga al menos 3 caracteres antes de permitir la creación.
+ */
 const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps) => {
   const [roomName, setRoomName] = useState('');
 
+  /**
+   * Maneja el intento de crear una sala.
+   * Valida el nombre y llama al callback onCreate si es válido.
+   */
   const handleCreate = async () => {
     const trimmed = roomName.trim();
 
@@ -40,11 +67,15 @@ const CreateRoomScreen = ({ visible, onClose, onCreate }: CreateRoomScreenProps)
     }
   };
 
+  /**
+   * Maneja la cancelación, limpiando el estado y cerrando el modal.
+   */
   const handleCancel = () => {
     setRoomName('');
     onClose();
   };
 
+  /** Indica si el nombre cumple la validación mínima */
   const isValid = roomName.trim().length >= 3;
 
   return (
